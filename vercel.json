@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "framework": null,
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "@vercel/node@3",
+      "includeFiles": "src/**/*.ts"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/weather", "destination": "/api/weather" },
+    { "source": "/api/geocode", "destination": "/api/geocode" },
+    { "source": "/api/health", "destination": "/api/health" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
