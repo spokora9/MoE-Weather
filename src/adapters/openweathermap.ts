@@ -179,7 +179,7 @@ export class OpenWeatherMapAdapter extends WeatherAdapter {
       this.config.timeout
     );
 
-    const data: OWMCurrentResponse = await response.json();
+    const data = (await response.json()) as OWMCurrentResponse;
     return this.parseCurrentWeather(data);
   }
 
@@ -220,7 +220,7 @@ export class OpenWeatherMapAdapter extends WeatherAdapter {
       this.config.timeout
     );
 
-    const data: OWMForecastResponse = await response.json();
+    const data = (await response.json()) as OWMForecastResponse;
 
     const hourly = this.parseHourlyForecast(data, request.hourlyHours || 48);
     const daily = this.parseDailyForecast(data, request.dailyDays || 7);

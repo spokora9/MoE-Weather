@@ -80,7 +80,7 @@ interface BrightSkyAlertsResponse {
 
 export class BrightSkyAdapter extends WeatherAdapter {
   constructor(config?: Partial<AdapterConfig>) {
-    super('open-meteo', { // Using 'open-meteo' as provider type since BrightSky is similar
+    super('bright-sky', {
       baseUrl: 'https://api.brightsky.dev',
       timeout: 10000,
       retries: 3,
@@ -113,7 +113,7 @@ export class BrightSkyAdapter extends WeatherAdapter {
     if (!this.isInCoverageArea(request.latitude, request.longitude)) {
       return {
         raw: {
-          provider: 'open-meteo', // Bright Sky maps to this
+          provider: 'bright-sky', // Bright Sky maps to this
           data: { error: 'Location outside Bright Sky (DWD) coverage area' },
           fetchedAt: new Date(),
           responseTime: Date.now() - startTime,
@@ -159,12 +159,12 @@ export class BrightSkyAdapter extends WeatherAdapter {
         throw weatherResult.reason;
       }
 
-      const weatherData: BrightSkyWeatherResponse = await weatherResult.value.json();
+      const weatherData = (await weatherResult.value.json()) as BrightSkyWeatherResponse;
 
       let alerts: WeatherAlert[] = [];
       if (alertsResult.status === 'fulfilled' && alertsResult.value) {
         try {
-          const alertsData: BrightSkyAlertsResponse = await alertsResult.value.json();
+          const alertsData = (await alertsResult.value.json()) as BrightSkyAlertsResponse;
           alerts = this.parseAlerts(alertsData);
         } catch {
           // Alerts parsing failed, continue without alerts
@@ -177,7 +177,7 @@ export class BrightSkyAdapter extends WeatherAdapter {
         daily: this.parseDailyForecast(weatherData, request.dailyDays),
         alerts,
         raw: {
-          provider: 'open-meteo',
+          provider: 'bright-sky',
           data: weatherData,
           fetchedAt: new Date(),
           responseTime,
@@ -186,7 +186,7 @@ export class BrightSkyAdapter extends WeatherAdapter {
     } catch (error) {
       return {
         raw: {
-          provider: 'open-meteo',
+          provider: 'bright-sky',
           data: { error: (error as Error).message },
           fetchedAt: new Date(),
           responseTime: Date.now() - startTime,

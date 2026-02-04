@@ -1,6 +1,7 @@
 {
   "name": "moe-weather",
   "version": "1.0.0",
+  "type": "module",
   "description": "Mixture of Experts Weather Application - Aggregates multiple free weather APIs for maximum accuracy",
   "main": "dist/server.js",
   "scripts": {

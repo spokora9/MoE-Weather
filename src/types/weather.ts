@@ -117,6 +117,8 @@ export type WeatherProvider =
   | 'openweathermap'
   | 'weatherapi'
   | 'tomorrow-io'
+  | 'bright-sky'
+  | 'met-norway'
   | 'cached';
 
 export enum WeatherCode {

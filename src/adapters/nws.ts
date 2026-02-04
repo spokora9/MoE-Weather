@@ -158,7 +158,7 @@ export class NWSAdapter extends WeatherAdapter {
         this.config.timeout
       );
 
-      const data: NWSPointsResponse = await response.json();
+      const data = (await response.json()) as NWSPointsResponse;
       this.pointsCache.set(cacheKey, data);
       return data;
     } catch {
@@ -242,7 +242,7 @@ export class NWSAdapter extends WeatherAdapter {
         10000
       );
 
-      const stationsData = await stationsResponse.json();
+      const stationsData = (await stationsResponse.json()) as { features?: Array<{ properties?: { stationIdentifier?: string } }> };
       const nearestStation = stationsData.features?.[0]?.properties?.stationIdentifier;
 
       if (!nearestStation) return undefined;
@@ -260,7 +260,7 @@ export class NWSAdapter extends WeatherAdapter {
         10000
       );
 
-      const obs: NWSObservationResponse = await obsResponse.json();
+      const obs = (await obsResponse.json()) as NWSObservationResponse;
       return this.parseObservation(obs);
     } catch {
       return undefined;
@@ -335,7 +335,7 @@ export class NWSAdapter extends WeatherAdapter {
         10000
       );
 
-      const data: NWSForecastResponse = await response.json();
+      const data = (await response.json()) as NWSForecastResponse;
       return this.parseHourlyForecast(data, hours);
     } catch {
       return [];
@@ -393,7 +393,7 @@ export class NWSAdapter extends WeatherAdapter {
         10000
       );
 
-      const data: NWSForecastResponse = await response.json();
+      const data = (await response.json()) as NWSForecastResponse;
       return this.parseDailyForecast(data, days);
     } catch {
       return [];
@@ -460,7 +460,7 @@ export class NWSAdapter extends WeatherAdapter {
         10000
       );
 
-      const data: NWSAlertsResponse = await response.json();
+      const data = (await response.json()) as NWSAlertsResponse;
       return data.features.map((f) => this.parseAlert(f.properties));
     } catch {
       return [];

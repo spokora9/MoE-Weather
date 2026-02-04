@@ -76,7 +76,7 @@ interface MetNorwayResponse {
 
 export class MetNorwayAdapter extends WeatherAdapter {
   constructor(config?: Partial<AdapterConfig>) {
-    super('open-meteo', { // Map to open-meteo type for compatibility
+    super('met-norway', {
       baseUrl: 'https://api.met.no/weatherapi/locationforecast/2.0',
       timeout: 10000,
       retries: 3,
@@ -119,7 +119,7 @@ export class MetNorwayAdapter extends WeatherAdapter {
         this.config.timeout
       );
 
-      const data: MetNorwayResponse = await response.json();
+      const data = (await response.json()) as MetNorwayResponse;
       const responseTime = Date.now() - startTime;
       this.incrementQuota();
 
@@ -129,7 +129,7 @@ export class MetNorwayAdapter extends WeatherAdapter {
         daily: this.parseDailyForecast(data, request.dailyDays),
         alerts: [], // MET Norway alerts require separate endpoint
         raw: {
-          provider: 'open-meteo',
+          provider: 'met-norway',
           data,
           fetchedAt: new Date(),
           responseTime,
@@ -138,7 +138,7 @@ export class MetNorwayAdapter extends WeatherAdapter {
     } catch (error) {
       return {
         raw: {
-          provider: 'open-meteo',
+          provider: 'met-norway',
           data: { error: (error as Error).message },
           fetchedAt: new Date(),
           responseTime: Date.now() - startTime,

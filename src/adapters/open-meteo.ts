@@ -159,7 +159,7 @@ export class OpenMeteoAdapter extends WeatherAdapter {
       this.config.timeout
     );
 
-    const data: OpenMeteoResponse = await response.json();
+    const data = (await response.json()) as OpenMeteoResponse;
     const responseTime = Date.now() - startTime;
 
     this.incrementQuota();

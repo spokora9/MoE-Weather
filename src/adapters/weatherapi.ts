@@ -199,7 +199,7 @@ export class WeatherAPIAdapter extends WeatherAdapter {
         this.config.timeout
       );
 
-      const data: WeatherAPIResponse = await response.json();
+      const data = (await response.json()) as WeatherAPIResponse;
       const responseTime = Date.now() - startTime;
       this.incrementQuota();
 

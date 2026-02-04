@@ -114,6 +114,30 @@ export class ConsensusEngine {
       cloudCover: 0.10,
       visibility: 0.10,
     });
+
+    // Bright Sky (German DWD) - excellent for Germany/Central Europe
+    this.providerWeights.set('bright-sky', {
+      temperature: 0.28,
+      precipitation: 0.30,
+      wind: 0.25,
+      humidity: 0.25,
+      pressure: 0.28,
+      uvIndex: 0.20,
+      cloudCover: 0.25,
+      visibility: 0.25,
+    });
+
+    // MET Norway - excellent for Nordic countries
+    this.providerWeights.set('met-norway', {
+      temperature: 0.28,
+      precipitation: 0.30,
+      wind: 0.28,
+      humidity: 0.25,
+      pressure: 0.25,
+      uvIndex: 0.20,
+      cloudCover: 0.25,
+      visibility: 0.20,
+    });
   }
 
   /**
