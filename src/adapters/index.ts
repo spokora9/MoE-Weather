@@ -10,3 +10,5 @@ export { OpenMeteoAdapter } from './open-meteo.js';
 export { NWSAdapter } from './nws.js';
 export { OpenWeatherMapAdapter } from './openweathermap.js';
 export { WeatherAPIAdapter } from './weatherapi.js';
+export { BrightSkyAdapter } from './bright-sky.js';
+export { MetNorwayAdapter } from './met-norway.js';

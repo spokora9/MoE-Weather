@@ -16,6 +16,8 @@ import {
   NWSAdapter,
   OpenWeatherMapAdapter,
   WeatherAPIAdapter,
+  BrightSkyAdapter,
+  MetNorwayAdapter,
   type AdapterResponse,
 } from '../adapters/index.js';
 import { ConsensusEngine, type ConsensusConfig } from './consensus.js';
@@ -80,22 +82,25 @@ export class WeatherOrchestrator {
     this.initializeAdapters();
   }
 
+  // Regional adapters for location-based routing (free, no key needed)
+  private regionalAdapters: {
+    brightSky: BrightSkyAdapter;
+    metNorway: MetNorwayAdapter;
+  } | null = null;
+
   private initializeAdapters(): void {
     const { enabledProviders, apiKeys } = this.config;
 
-    // Always initialize Open-Meteo (free, no key needed)
+    // === GLOBAL PROVIDERS (work everywhere) ===
+
+    // Open-Meteo: Primary global source (free, no key needed)
+    // Aggregates: ECMWF, GFS, DWD ICON, MeteoFrance, JMA, MET Norway, GEM, UKMO
     if (enabledProviders.includes('open-meteo')) {
       this.adapters.set('open-meteo', new OpenMeteoAdapter());
       this.initHealthStatus('open-meteo');
     }
 
-    // Always initialize NWS (free, no key needed, US only)
-    if (enabledProviders.includes('nws')) {
-      this.adapters.set('nws', new NWSAdapter());
-      this.initHealthStatus('nws');
-    }
-
-    // Initialize OpenWeatherMap if key provided
+    // OpenWeatherMap: Global coverage (requires key)
     if (enabledProviders.includes('openweathermap') && apiKeys.openWeatherMap) {
       this.adapters.set(
         'openweathermap',
@@ -104,7 +109,7 @@ export class WeatherOrchestrator {
       this.initHealthStatus('openweathermap');
     }
 
-    // Initialize WeatherAPI if key provided
+    // WeatherAPI: Global coverage (requires key)
     if (enabledProviders.includes('weatherapi') && apiKeys.weatherApi) {
       this.adapters.set(
         'weatherapi',
@@ -113,9 +118,26 @@ export class WeatherOrchestrator {
       this.initHealthStatus('weatherapi');
     }
 
+    // === REGIONAL PROVIDERS (free, no key, best for specific regions) ===
+
+    // NWS: US only (official government source)
+    if (enabledProviders.includes('nws')) {
+      this.adapters.set('nws', new NWSAdapter());
+      this.initHealthStatus('nws');
+    }
+
+    // Initialize regional adapters (always available, location-filtered)
+    this.regionalAdapters = {
+      brightSky: new BrightSkyAdapter(),  // Germany/Central Europe
+      metNorway: new MetNorwayAdapter(),  // Nordic countries
+    };
+
     console.log(
       `[Orchestrator] Initialized ${this.adapters.size} weather providers:`,
       Array.from(this.adapters.keys()).join(', ')
+    );
+    console.log(
+      `[Orchestrator] Regional providers: Bright Sky (Germany/EU), MET Norway (Nordic)`
     );
   }
 
@@ -148,14 +170,20 @@ export class WeatherOrchestrator {
     // Determine which providers to query
     const providers = this.selectProviders(latitude, longitude);
 
-    if (providers.length === 0) {
+    // Get regional adapters for this location
+    const regionalAdapters = this.getRegionalAdapters(latitude, longitude);
+
+    if (providers.length === 0 && regionalAdapters.length === 0) {
       throw new Error('No weather providers available');
     }
 
-    console.log(`[Orchestrator] Querying providers: ${providers.join(', ')}`);
+    console.log(`[Orchestrator] Querying global providers: ${providers.join(', ')}`);
+    if (regionalAdapters.length > 0) {
+      console.log(`[Orchestrator] Querying regional providers for enhanced accuracy`);
+    }
 
-    // Fetch from all selected providers in parallel
-    const results = await this.fetchFromProviders(providers, request);
+    // Fetch from all selected providers in parallel (global + regional)
+    const results = await this.fetchFromAllProviders(providers, regionalAdapters, request);
 
     // Build consensus from results
     const weatherData = this.buildConsensus(results, request);
@@ -168,21 +196,25 @@ export class WeatherOrchestrator {
 
   /**
    * Select which providers to query based on location and health
+   * Uses smart regional routing for maximum accuracy
    */
   private selectProviders(lat: number, lon: number): WeatherProvider[] {
     const selected: WeatherProvider[] = [];
 
-    // Always include Open-Meteo if available (unlimited, free)
+    // Always include Open-Meteo if available (unlimited, free, GLOBAL)
+    // Open-Meteo aggregates: ECMWF, GFS, DWD ICON, MeteoFrance, JMA, MET Norway, GEM, UKMO
     if (this.isProviderAvailable('open-meteo')) {
       selected.push('open-meteo');
     }
 
-    // Include NWS for US locations
+    // REGIONAL ROUTING: Add best regional sources based on location
+
+    // US locations: Add NWS (official US government source)
     if (this.isProviderAvailable('nws') && this.isUSLocation(lat, lon)) {
       selected.push('nws');
     }
 
-    // Add additional providers based on quota and health
+    // Add global providers with API keys for additional consensus
     const additionalProviders: WeatherProvider[] = ['openweathermap', 'weatherapi', 'tomorrow-io'];
 
     for (const provider of additionalProviders) {
@@ -193,6 +225,27 @@ export class WeatherOrchestrator {
     }
 
     return selected;
+  }
+
+  /**
+   * Get regional adapters that should be queried for a location
+   */
+  private getRegionalAdapters(lat: number, lon: number): WeatherAdapter[] {
+    const regional: WeatherAdapter[] = [];
+
+    if (this.regionalAdapters) {
+      // Germany/Central Europe: Bright Sky (DWD data)
+      if (this.regionalAdapters.brightSky.isInCoverageArea(lat, lon)) {
+        regional.push(this.regionalAdapters.brightSky);
+      }
+
+      // Nordic countries: MET Norway
+      if (this.regionalAdapters.metNorway.isInCoverageArea(lat, lon)) {
+        regional.push(this.regionalAdapters.metNorway);
+      }
+    }
+
+    return regional;
   }
 
   /**
@@ -220,10 +273,11 @@ export class WeatherOrchestrator {
   }
 
   /**
-   * Fetch weather data from multiple providers
+   * Fetch weather data from all providers (global + regional)
    */
-  private async fetchFromProviders(
-    providers: WeatherProvider[],
+  private async fetchFromAllProviders(
+    globalProviders: WeatherProvider[],
+    regionalAdapters: WeatherAdapter[],
     request: WeatherRequest
   ): Promise<
     Array<{
@@ -232,44 +286,68 @@ export class WeatherOrchestrator {
       timestamp: Date;
     }>
   > {
-    const fetchPromises = providers.map(async (provider) => {
+    // Fetch from global providers
+    const globalPromises = globalProviders.map(async (provider) => {
       const adapter = this.adapters.get(provider)!;
-      const startTime = Date.now();
-
-      try {
-        const data = await Promise.race([
-          adapter.fetch(request),
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Timeout')), this.config.timeout)
-          ),
-        ]);
-
-        // Update health status on success
-        this.updateHealthStatus(provider, true);
-
-        console.log(
-          `[Orchestrator] ${provider} responded in ${Date.now() - startTime}ms`
-        );
-
-        return {
-          provider,
-          data,
-          timestamp: new Date(),
-        };
-      } catch (error) {
-        console.error(
-          `[Orchestrator] ${provider} failed:`,
-          (error as Error).message
-        );
-        this.updateHealthStatus(provider, false);
-        return null;
-      }
+      return this.fetchFromAdapter(provider, adapter, request);
     });
 
-    const results = await Promise.all(fetchPromises);
+    // Fetch from regional adapters
+    const regionalPromises = regionalAdapters.map(async (adapter) => {
+      const provider = adapter.getProvider();
+      return this.fetchFromAdapter(provider, adapter, request);
+    });
+
+    const allPromises = [...globalPromises, ...regionalPromises];
+    const results = await Promise.all(allPromises);
+
     return results.filter(
       (r): r is NonNullable<typeof r> => r !== null && r.data.current !== undefined
     );
+  }
+
+  /**
+   * Fetch from a single adapter with timeout and error handling
+   */
+  private async fetchFromAdapter(
+    provider: WeatherProvider,
+    adapter: WeatherAdapter,
+    request: WeatherRequest
+  ): Promise<{
+    provider: WeatherProvider;
+    data: AdapterResponse;
+    timestamp: Date;
+  } | null> {
+    const startTime = Date.now();
+
+    try {
+      const data = await Promise.race([
+        adapter.fetch(request),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), this.config.timeout)
+        ),
+      ]);
+
+      // Update health status on success
+      this.updateHealthStatus(provider, true);
+
+      console.log(
+        `[Orchestrator] ${provider} responded in ${Date.now() - startTime}ms`
+      );
+
+      return {
+        provider,
+        data,
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      console.error(
+        `[Orchestrator] ${provider} failed:`,
+        (error as Error).message
+      );
+      this.updateHealthStatus(provider, false);
+      return null;
+    }
   }
 
   /**
