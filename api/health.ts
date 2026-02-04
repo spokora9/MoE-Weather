@@ -3,7 +3,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { WeatherOrchestrator } from '../src/engine/orchestrator';
+import { WeatherOrchestrator } from '../dist/engine/orchestrator.js';
 
 // Initialize orchestrator (cached between invocations)
 let orchestrator: WeatherOrchestrator | null = null;

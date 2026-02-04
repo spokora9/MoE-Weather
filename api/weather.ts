@@ -4,8 +4,8 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
-import { WeatherOrchestrator } from '../src/engine/orchestrator';
-import type { WeatherRequest } from '../src/types/weather';
+import { WeatherOrchestrator } from '../dist/engine/orchestrator.js';
+import type { WeatherRequest } from '../dist/types/weather.js';
 
 const weatherQuerySchema = z.object({
   lat: z.coerce.number().min(-90).max(90),

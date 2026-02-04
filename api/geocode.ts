@@ -4,7 +4,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
-import { WeatherOrchestrator } from '../src/engine/orchestrator';
+import { WeatherOrchestrator } from '../dist/engine/orchestrator.js';
 
 const geocodeQuerySchema = z.object({
   q: z.string().min(2).max(100),
