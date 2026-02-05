@@ -1333,7 +1333,7 @@
 
     async function fetchHistorical(lat, lon) {
       try {
-        const res = await fetch(`/api/historical?lat=${lat}&lon=${lon}&days=10`);
+        const res = await fetch(`/api/historical?lat=${lat}&lon=${lon}&days=30`);
         if (!res.ok) throw new Error('Failed to fetch historical');
         const data = await res.json();
         state.historical = data;
@@ -1428,38 +1428,40 @@
     function renderHistoricalComparison(data) {
       if (!data || !state.weather) return;
 
+      const days = data.period_days || 30;
+
       // Humidity comparison
       const currentHumidity = state.weather.current.humidity;
-      const avgHumidity = data.humidity.avg;
+      const avgHumidity = data.humidity?.avg;
       if (avgHumidity) {
         const humidityDiff = currentHumidity - avgHumidity;
         const humidityEl = $('statHumidityAvg');
         if (Math.abs(humidityDiff) < 5) {
-          humidityEl.textContent = '≈ avg';
+          humidityEl.textContent = `≈ ${days}d avg`;
           humidityEl.className = 'quick-stat-avg normal';
         } else if (humidityDiff > 0) {
-          humidityEl.textContent = `↑ +${humidityDiff.toFixed(0)}% vs avg`;
+          humidityEl.textContent = `↑${humidityDiff.toFixed(0)}% vs ${days}d`;
           humidityEl.className = 'quick-stat-avg above';
         } else {
-          humidityEl.textContent = `↓ ${humidityDiff.toFixed(0)}% vs avg`;
+          humidityEl.textContent = `↓${Math.abs(humidityDiff).toFixed(0)}% vs ${days}d`;
           humidityEl.className = 'quick-stat-avg below';
         }
       }
 
       // Wind comparison
       const currentWind = state.weather.current.windSpeed;
-      const avgWind = data.wind.avg_max ? data.wind.avg_max / 3.6 : null; // Convert km/h to m/s
+      const avgWind = data.wind?.avg_max ? data.wind.avg_max / 3.6 : null; // Convert km/h to m/s
       if (avgWind) {
         const windDiff = currentWind - avgWind;
         const windEl = $('statWindAvg');
         if (Math.abs(windDiff) < 1) {
-          windEl.textContent = '≈ avg';
+          windEl.textContent = `≈ ${days}d avg`;
           windEl.className = 'quick-stat-avg normal';
         } else if (windDiff > 0) {
-          windEl.textContent = `↑ +${windDiff.toFixed(1)} vs avg`;
+          windEl.textContent = `↑${windDiff.toFixed(1)} vs ${days}d`;
           windEl.className = 'quick-stat-avg above';
         } else {
-          windEl.textContent = `↓ ${windDiff.toFixed(1)} vs avg`;
+          windEl.textContent = `↓${Math.abs(windDiff).toFixed(1)} vs ${days}d`;
           windEl.className = 'quick-stat-avg below';
         }
       }
@@ -1758,55 +1760,101 @@
     }
 
     // ==================== PULL TO REFRESH ====================
-    let pullStartY = 0;
-    let isPulling = false;
-    let pullTriggered = false;
-    const PULL_THRESHOLD = 120; // Pixels to pull before triggering refresh
+    // Robust pull-to-refresh that only triggers with intentional pull gesture
+    const pullState = {
+      startY: 0,
+      startScrollTop: 0,
+      isActive: false,
+      hasTriggered: false,
+      touchId: null,
+      firstMoveChecked: false,
+      isValidPull: false
+    };
+    const PULL_THRESHOLD = 150; // Pixels to pull before triggering refresh
 
     function initPullToRefresh() {
       const main = els.mainContent;
 
       main.addEventListener('touchstart', e => {
-        // Only allow pull if we're at the very top (scroll position 0)
-        if (main.scrollTop <= 0) {
-          pullStartY = e.touches[0].clientY;
-          isPulling = true;
-          pullTriggered = false;
-        }
+        // Reset state
+        pullState.startY = e.touches[0].clientY;
+        pullState.startScrollTop = main.scrollTop;
+        pullState.touchId = e.touches[0].identifier;
+        pullState.isActive = true;
+        pullState.hasTriggered = false;
+        pullState.firstMoveChecked = false;
+        pullState.isValidPull = false;
       }, { passive: true });
 
       main.addEventListener('touchmove', e => {
-        if (!isPulling) return;
+        if (!pullState.isActive) return;
 
-        // Cancel pull if user scrolled down (no longer at top)
-        if (main.scrollTop > 0) {
-          isPulling = false;
+        // Find the original touch
+        let touch = null;
+        for (let i = 0; i < e.touches.length; i++) {
+          if (e.touches[i].identifier === pullState.touchId) {
+            touch = e.touches[i];
+            break;
+          }
+        }
+        if (!touch) return;
+
+        const currentY = touch.clientY;
+        const deltaY = currentY - pullState.startY;
+
+        // CRITICAL: Only allow pull-to-refresh if:
+        // 1. We started the touch when ALREADY at the top (scrollTop was 0)
+        // 2. The first movement was DOWNWARD (pulling down, not scrolling up)
+        // 3. We're still at the top
+        if (!pullState.firstMoveChecked && Math.abs(deltaY) > 10) {
+          pullState.firstMoveChecked = true;
+          // Only valid if started at top AND first move is down
+          pullState.isValidPull = (pullState.startScrollTop <= 0) && (deltaY > 0);
+        }
+
+        // If this isn't a valid pull gesture, don't do anything
+        if (!pullState.isValidPull) {
+          return;
+        }
+
+        // If user has scrolled down (no longer at top), cancel
+        if (main.scrollTop > 5) {
+          pullState.isValidPull = false;
           els.pullIndicator.classList.remove('visible');
           return;
         }
 
-        const pullDistance = e.touches[0].clientY - pullStartY;
-
-        // Only show indicator if pulling DOWN (positive distance) and past threshold
-        if (pullDistance > PULL_THRESHOLD && main.scrollTop <= 0) {
+        // Show indicator and mark as triggered when threshold is reached
+        if (deltaY > PULL_THRESHOLD) {
           els.pullIndicator.classList.add('visible');
-          pullTriggered = true;
-        } else if (pullDistance < PULL_THRESHOLD / 2) {
-          // Remove indicator if pull distance reduced significantly
+          pullState.hasTriggered = true;
+        } else {
           els.pullIndicator.classList.remove('visible');
-          pullTriggered = false;
+          pullState.hasTriggered = false;
         }
       }, { passive: true });
 
       main.addEventListener('touchend', () => {
-        if (pullTriggered && els.pullIndicator.classList.contains('visible')) {
+        if (pullState.hasTriggered && pullState.isValidPull) {
           fetchWeatherForActive();
           setTimeout(() => els.pullIndicator.classList.remove('visible'), 1000);
         } else {
           els.pullIndicator.classList.remove('visible');
         }
-        isPulling = false;
-        pullTriggered = false;
+        // Reset state
+        pullState.isActive = false;
+        pullState.hasTriggered = false;
+        pullState.isValidPull = false;
+        pullState.firstMoveChecked = false;
+      });
+
+      // Also handle touchcancel
+      main.addEventListener('touchcancel', () => {
+        els.pullIndicator.classList.remove('visible');
+        pullState.isActive = false;
+        pullState.hasTriggered = false;
+        pullState.isValidPull = false;
+        pullState.firstMoveChecked = false;
       });
     }
 
