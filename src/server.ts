@@ -695,69 +695,64 @@ function calculateTides(longitude: number): {
   };
 }
 
-// Moon phase calculation
+// Moon phase calculation - using reference new moon method for accuracy
 function getMoonPhase(date: Date): {
   phase: string;
   illumination: number;
   emoji: string;
   zodiac: { sign: string; emoji: string };
 } {
-  // Simplified moon phase calculation
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
+  // Reference new moon: January 11, 2024 at 11:57 UTC
+  const referenceNewMoon = new Date('2024-01-11T11:57:00Z');
+  const lunarCycle = 29.53059; // days
 
-  let c = 0, e = 0, jd = 0, b = 0;
+  // Calculate days since reference new moon
+  const daysSinceReference = (date.getTime() - referenceNewMoon.getTime()) / (1000 * 60 * 60 * 24);
 
-  if (month < 3) {
-    c = 4716;
-    e = 1;
-  } else {
-    c = 4716;
-    e = -1;
-  }
-
-  jd = Math.floor(365.25 * (year + c)) + Math.floor(30.6001 * (month + e)) + day - 1524.5;
-  const daysSinceNew = jd - 2451549.5;
-  const newMoons = daysSinceNew / 29.53059;
-  const phase = (newMoons - Math.floor(newMoons)) * 29.53059;
+  // Get current position in lunar cycle (0 to 29.53)
+  const cyclePosition = ((daysSinceReference % lunarCycle) + lunarCycle) % lunarCycle;
 
   let phaseName: string;
   let emoji: string;
   let illumination: number;
 
-  if (phase < 1.85) {
+  // Determine phase based on position in cycle
+  if (cyclePosition < 1.85) {
     phaseName = 'New Moon';
     emoji = '🌑';
-    illumination = 0;
-  } else if (phase < 7.38) {
+    illumination = Math.round((1 - Math.cos(cyclePosition / lunarCycle * 2 * Math.PI)) / 2 * 100);
+  } else if (cyclePosition < 7.38) {
     phaseName = 'Waxing Crescent';
     emoji = '🌒';
-    illumination = Math.round((phase - 1.85) / 5.53 * 50);
-  } else if (phase < 9.23) {
+    illumination = Math.round((1 - Math.cos(cyclePosition / lunarCycle * 2 * Math.PI)) / 2 * 100);
+  } else if (cyclePosition < 9.23) {
     phaseName = 'First Quarter';
     emoji = '🌓';
     illumination = 50;
-  } else if (phase < 14.77) {
+  } else if (cyclePosition < 14.77) {
     phaseName = 'Waxing Gibbous';
     emoji = '🌔';
-    illumination = 50 + Math.round((phase - 9.23) / 5.54 * 50);
-  } else if (phase < 16.61) {
+    illumination = Math.round((1 - Math.cos(cyclePosition / lunarCycle * 2 * Math.PI)) / 2 * 100);
+  } else if (cyclePosition < 16.61) {
     phaseName = 'Full Moon';
     emoji = '🌕';
     illumination = 100;
-  } else if (phase < 22.15) {
+  } else if (cyclePosition < 22.15) {
     phaseName = 'Waning Gibbous';
     emoji = '🌖';
-    illumination = 100 - Math.round((phase - 16.61) / 5.54 * 50);
-  } else if (phase < 24.0) {
+    illumination = Math.round((1 - Math.cos(cyclePosition / lunarCycle * 2 * Math.PI)) / 2 * 100);
+  } else if (cyclePosition < 23.99) {
     phaseName = 'Last Quarter';
     emoji = '🌗';
     illumination = 50;
-  } else {
+  } else if (cyclePosition < 27.68) {
     phaseName = 'Waning Crescent';
     emoji = '🌘';
-    illumination = 50 - Math.round((phase - 24.0) / 5.53 * 50);
+    illumination = Math.round((1 - Math.cos(cyclePosition / lunarCycle * 2 * Math.PI)) / 2 * 100);
+  } else {
+    phaseName = 'New Moon';
+    emoji = '🌑';
+    illumination = Math.round((1 - Math.cos(cyclePosition / lunarCycle * 2 * Math.PI)) / 2 * 100);
   }
 
   // Calculate zodiac sign for the moon
