@@ -263,10 +263,11 @@ app.get('/api/historical', async (req: Request, res: Response) => {
     const query = historicalQuerySchema.parse(req.query);
 
     // Calculate date range (past N days)
+    // Note: Archive API has ~5 day delay, so end 7 days ago to ensure data availability
     const endDate = new Date();
-    endDate.setDate(endDate.getDate() - 1); // Yesterday
+    endDate.setDate(endDate.getDate() - 7); // 7 days ago (archive delay)
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - query.days);
+    startDate.setDate(startDate.getDate() - query.days - 7);
 
     const formatDate = (d: Date) => d.toISOString().split('T')[0];
 

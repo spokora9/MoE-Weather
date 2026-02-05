@@ -1364,13 +1364,17 @@
     async function fetchHistorical(lat, lon) {
       try {
         const res = await fetch(`/api/historical?lat=${lat}&lon=${lon}&days=30`);
-        if (!res.ok) throw new Error('Failed to fetch historical');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.error('Historical API error:', res.status, errData);
+          return;
+        }
         const data = await res.json();
+        console.log('Historical data received:', data);
         state.historical = data;
         renderHistoricalComparison(data);
       } catch (e) {
-        // Silently fail, historical comparison is optional
-        console.log('Historical data unavailable');
+        console.error('Historical fetch error:', e);
       }
     }
 
@@ -1501,11 +1505,18 @@
     async function fetchAstronomy(lat, lon) {
       try {
         const res = await fetch(`/api/astronomy?lat=${lat}&lon=${lon}`);
-        if (!res.ok) throw new Error('Failed to fetch astronomy');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.error('Astronomy API error:', res.status, errData);
+          $('astroCard').innerHTML = `<div class="aqi-loading">Astronomy data unavailable</div>`;
+          return;
+        }
         const data = await res.json();
+        console.log('Astronomy data received:', data);
         state.astronomy = data;
         renderAstronomy(data);
       } catch (e) {
+        console.error('Astronomy fetch error:', e);
         $('astroCard').innerHTML = `<div class="aqi-loading">Astronomy data unavailable</div>`;
       }
     }
@@ -1577,11 +1588,18 @@
     async function fetchMarine(lat, lon) {
       try {
         const res = await fetch(`/api/marine?lat=${lat}&lon=${lon}`);
-        if (!res.ok) throw new Error('Failed to fetch marine');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.error('Marine API error:', res.status, errData);
+          $('marineCard').innerHTML = `<div class="aqi-loading">Marine data unavailable (location may be inland)</div>`;
+          return;
+        }
         const data = await res.json();
+        console.log('Marine data received:', data);
         state.marine = data;
         renderMarine(data);
       } catch (e) {
+        console.error('Marine fetch error:', e);
         $('marineCard').innerHTML = `<div class="aqi-loading">Marine data unavailable (location may be inland)</div>`;
       }
     }
