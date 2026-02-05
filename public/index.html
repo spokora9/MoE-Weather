@@ -144,7 +144,7 @@
       gap: 12px;
       margin-bottom: 8px;
     }
-    .hero-icon { font-size: 56px; line-height: 1; }
+    .hero-icon { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; }
     .hero-temp { font-size: 64px; font-weight: 700; line-height: 1; }
     .hero-condition {
       font-size: 18px;
@@ -279,7 +279,7 @@
       min-width: 58px;
     }
     .hourly-time { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
-    .hourly-icon { font-size: 22px; margin-bottom: 4px; }
+    .hourly-icon { width: 32px; height: 32px; margin-bottom: 4px; display: flex; align-items: center; justify-content: center; }
     .hourly-temp { font-size: 14px; font-weight: 600; }
     .hourly-wind { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
     .hourly-precip { font-size: 10px; color: var(--primary); margin-top: 2px; }
@@ -294,7 +294,7 @@
     }
     .daily-item:last-child { border-bottom: none; }
     .daily-day { flex: 1; font-size: 14px; font-weight: 500; }
-    .daily-icon { font-size: 22px; margin: 0 12px; }
+    .daily-icon { width: 32px; height: 32px; margin: 0 12px; display: flex; align-items: center; justify-content: center; }
     .daily-temps {
       display: flex;
       align-items: center;
@@ -1062,15 +1062,51 @@
       ACTIVE: 'moe_active_location',
       THEME: 'moe_theme'
     };
-    const ICONS = {
-      0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',
-      51:'🌧️',53:'🌧️',55:'🌧️',56:'🌧️',57:'🌧️',
-      61:'🌧️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',
-      71:'🌨️',73:'🌨️',75:'🌨️',77:'🌨️',
-      80:'🌦️',81:'🌦️',82:'🌦️',85:'🌨️',86:'🌨️',
-      95:'⛈️',96:'⛈️',99:'⛈️','-1':'❓'
+    // Meteocons icon mapping (WMO weather codes to Meteocons)
+    const METEOCONS_BASE = 'https://cdn.jsdelivr.net/gh/basmilius/weather-icons@2.0.0/production/fill/svg/';
+    const ICON_MAP = {
+      0: 'clear-day',           // Clear sky
+      1: 'clear-day',           // Mainly clear
+      2: 'partly-cloudy-day',   // Partly cloudy
+      3: 'overcast',            // Overcast
+      45: 'fog',                // Fog
+      48: 'fog',                // Depositing rime fog
+      51: 'drizzle',            // Light drizzle
+      53: 'drizzle',            // Moderate drizzle
+      55: 'drizzle',            // Dense drizzle
+      56: 'sleet',              // Freezing drizzle light
+      57: 'sleet',              // Freezing drizzle dense
+      61: 'rain',               // Slight rain
+      63: 'rain',               // Moderate rain
+      65: 'extreme-rain',       // Heavy rain
+      66: 'sleet',              // Freezing rain light
+      67: 'sleet',              // Freezing rain heavy
+      71: 'snow',               // Slight snow
+      73: 'snow',               // Moderate snow
+      75: 'extreme-snow',       // Heavy snow
+      77: 'snow',               // Snow grains
+      80: 'partly-cloudy-day-rain', // Rain showers slight
+      81: 'rain',               // Rain showers moderate
+      82: 'extreme-rain',       // Rain showers violent
+      85: 'snow',               // Snow showers slight
+      86: 'extreme-snow',       // Snow showers heavy
+      95: 'thunderstorms',      // Thunderstorm
+      96: 'thunderstorms',      // Thunderstorm with hail
+      99: 'thunderstorms',      // Thunderstorm with heavy hail
     };
-    const getIcon = (code) => ICONS[code] || ICONS['-1'];
+    const getIconUrl = (code) => {
+      const iconName = ICON_MAP[code] || 'not-available';
+      return `${METEOCONS_BASE}${iconName}.svg`;
+    };
+    const getIcon = (code, size = 48) => {
+      const url = getIconUrl(code);
+      return `<img src="${url}" alt="weather" width="${size}" height="${size}" style="display:block;">`;
+    };
+    // Fallback emoji icons for non-weather uses
+    const EMOJI_ICONS = {
+      humidity: '💧', wind: '💨', precip: '🌧️', uv: '☀️',
+      sunrise: '🌅', sunset: '🌇', moon: '🌙', location: '📍'
+    };
 
     // ==================== STATE ====================
     let state = {
@@ -1239,7 +1275,7 @@
       els.headerLocationText.textContent = loc ? loc.name : 'Unknown';
 
       // Hero
-      els.heroIcon.textContent = getIcon(data.current.weatherCode);
+      els.heroIcon.innerHTML = getIcon(data.current.weatherCode, 64);
       els.heroTemp.textContent = Math.round(data.current.temperature) + '°';
       els.heroCondition.textContent = data.current.weatherDescription;
 
@@ -1275,7 +1311,7 @@
         return `
           <div class="hourly-item">
             <div class="hourly-time">${label}</div>
-            <div class="hourly-icon">${getIcon(h.weatherCode)}</div>
+            <div class="hourly-icon">${getIcon(h.weatherCode, 32)}</div>
             <div class="hourly-temp">${Math.round(h.temperature)}°</div>
             <div class="hourly-wind">💨${windSpeed}</div>
             ${precipAmount}
@@ -1300,7 +1336,7 @@
         return `
           <div class="daily-item">
             <div class="daily-day">${dayName}</div>
-            <div class="daily-icon">${getIcon(d.weatherCode)}</div>
+            <div class="daily-icon">${getIcon(d.weatherCode, 32)}</div>
             ${precipInfo}
             <div class="daily-temps">
               <span class="daily-high">${Math.round(d.temperatureMax)}°</span>
@@ -1844,102 +1880,81 @@
     }
 
     // ==================== PULL TO REFRESH ====================
-    // Robust pull-to-refresh that only triggers with intentional pull gesture
-    const pullState = {
-      startY: 0,
-      startScrollTop: 0,
-      isActive: false,
-      hasTriggered: false,
-      touchId: null,
-      firstMoveChecked: false,
-      isValidPull: false
-    };
-    const PULL_THRESHOLD = 150; // Pixels to pull before triggering refresh
+    // Only triggers when user is settled at top and pulls down intentionally
+    let isAtTop = false;
+    let atTopSince = 0;
+    let pullStartY = 0;
+    let isPulling = false;
+    const PULL_THRESHOLD = 150;
+    const SETTLE_TIME = 200; // Must be at top for 200ms before pull is allowed
 
     function initPullToRefresh() {
       const main = els.mainContent;
 
+      // Track when we're at the top
+      main.addEventListener('scroll', () => {
+        if (main.scrollTop <= 0) {
+          if (!isAtTop) {
+            isAtTop = true;
+            atTopSince = Date.now();
+          }
+        } else {
+          isAtTop = false;
+          atTopSince = 0;
+          isPulling = false;
+          els.pullIndicator.classList.remove('visible');
+        }
+      }, { passive: true });
+
       main.addEventListener('touchstart', e => {
-        // Reset state
-        pullState.startY = e.touches[0].clientY;
-        pullState.startScrollTop = main.scrollTop;
-        pullState.touchId = e.touches[0].identifier;
-        pullState.isActive = true;
-        pullState.hasTriggered = false;
-        pullState.firstMoveChecked = false;
-        pullState.isValidPull = false;
+        // Only allow pull if we've been at top for SETTLE_TIME
+        const settledAtTop = isAtTop && (Date.now() - atTopSince > SETTLE_TIME);
+        if (settledAtTop && main.scrollTop <= 0) {
+          pullStartY = e.touches[0].clientY;
+          isPulling = true;
+        } else {
+          isPulling = false;
+        }
       }, { passive: true });
 
       main.addEventListener('touchmove', e => {
-        if (!pullState.isActive) return;
-
-        // Find the original touch
-        let touch = null;
-        for (let i = 0; i < e.touches.length; i++) {
-          if (e.touches[i].identifier === pullState.touchId) {
-            touch = e.touches[i];
-            break;
-          }
-        }
-        if (!touch) return;
-
-        const currentY = touch.clientY;
-        const deltaY = currentY - pullState.startY;
-
-        // CRITICAL: Only allow pull-to-refresh if:
-        // 1. We started the touch when ALREADY at the top (scrollTop was 0)
-        // 2. The first movement was DOWNWARD (pulling down, not scrolling up)
-        // 3. We're still at the top
-        if (!pullState.firstMoveChecked && Math.abs(deltaY) > 10) {
-          pullState.firstMoveChecked = true;
-          // Only valid if started at top AND first move is down
-          pullState.isValidPull = (pullState.startScrollTop <= 0) && (deltaY > 0);
-        }
-
-        // If this isn't a valid pull gesture, don't do anything
-        if (!pullState.isValidPull) {
-          return;
-        }
-
-        // If user has scrolled down (no longer at top), cancel
-        if (main.scrollTop > 5) {
-          pullState.isValidPull = false;
+        if (!isPulling || main.scrollTop > 0) {
+          isPulling = false;
           els.pullIndicator.classList.remove('visible');
           return;
         }
 
-        // Show indicator and mark as triggered when threshold is reached
-        if (deltaY > PULL_THRESHOLD) {
+        const currentY = e.touches[0].clientY;
+        const pullDistance = currentY - pullStartY;
+
+        // Only show if pulling DOWN (positive) past threshold
+        if (pullDistance > PULL_THRESHOLD) {
           els.pullIndicator.classList.add('visible');
-          pullState.hasTriggered = true;
-        } else {
+        } else if (pullDistance < 50) {
           els.pullIndicator.classList.remove('visible');
-          pullState.hasTriggered = false;
         }
       }, { passive: true });
 
       main.addEventListener('touchend', () => {
-        if (pullState.hasTriggered && pullState.isValidPull) {
+        if (isPulling && els.pullIndicator.classList.contains('visible')) {
           fetchWeatherForActive();
           setTimeout(() => els.pullIndicator.classList.remove('visible'), 1000);
         } else {
           els.pullIndicator.classList.remove('visible');
         }
-        // Reset state
-        pullState.isActive = false;
-        pullState.hasTriggered = false;
-        pullState.isValidPull = false;
-        pullState.firstMoveChecked = false;
+        isPulling = false;
       });
 
-      // Also handle touchcancel
       main.addEventListener('touchcancel', () => {
         els.pullIndicator.classList.remove('visible');
-        pullState.isActive = false;
-        pullState.hasTriggered = false;
-        pullState.isValidPull = false;
-        pullState.firstMoveChecked = false;
+        isPulling = false;
       });
+
+      // Initialize atTop state
+      if (main.scrollTop <= 0) {
+        isAtTop = true;
+        atTopSince = Date.now();
+      }
     }
 
     // ==================== EVENTS ====================
