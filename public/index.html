@@ -1063,7 +1063,8 @@
       THEME: 'moe_theme'
     };
     // Meteocons icon mapping (WMO weather codes to Meteocons)
-    const METEOCONS_BASE = 'https://cdn.jsdelivr.net/gh/basmilius/weather-icons@2.0.0/production/fill/svg/';
+    // Using basmilius/weather-icons from jsDelivr CDN
+    const METEOCONS_BASE = 'https://cdn.jsdelivr.net/npm/@bybas/weather-icons@latest/production/fill/svg/';
     const ICON_MAP = {
       0: 'clear-day',           // Clear sky
       1: 'clear-day',           // Mainly clear
@@ -1078,18 +1079,18 @@
       57: 'sleet',              // Freezing drizzle dense
       61: 'rain',               // Slight rain
       63: 'rain',               // Moderate rain
-      65: 'extreme-rain',       // Heavy rain
+      65: 'rain',               // Heavy rain
       66: 'sleet',              // Freezing rain light
       67: 'sleet',              // Freezing rain heavy
       71: 'snow',               // Slight snow
       73: 'snow',               // Moderate snow
-      75: 'extreme-snow',       // Heavy snow
+      75: 'snow',               // Heavy snow
       77: 'snow',               // Snow grains
       80: 'partly-cloudy-day-rain', // Rain showers slight
       81: 'rain',               // Rain showers moderate
-      82: 'extreme-rain',       // Rain showers violent
+      82: 'thunderstorms-rain', // Rain showers violent
       85: 'snow',               // Snow showers slight
-      86: 'extreme-snow',       // Snow showers heavy
+      86: 'snow',               // Snow showers heavy
       95: 'thunderstorms',      // Thunderstorm
       96: 'thunderstorms',      // Thunderstorm with hail
       99: 'thunderstorms',      // Thunderstorm with heavy hail
@@ -1100,7 +1101,7 @@
     };
     const getIcon = (code, size = 48) => {
       const url = getIconUrl(code);
-      return `<img src="${url}" alt="weather" width="${size}" height="${size}" style="display:block;">`;
+      return `<img src="${url}" alt="weather" width="${size}" height="${size}" style="display:block;" onerror="this.style.display='none'">`;
     };
     // Fallback emoji icons for non-weather uses
     const EMOJI_ICONS = {
@@ -1880,81 +1881,10 @@
     }
 
     // ==================== PULL TO REFRESH ====================
-    // Only triggers when user is settled at top and pulls down intentionally
-    let isAtTop = false;
-    let atTopSince = 0;
-    let pullStartY = 0;
-    let isPulling = false;
-    const PULL_THRESHOLD = 150;
-    const SETTLE_TIME = 200; // Must be at top for 200ms before pull is allowed
-
+    // Disabled - use the refresh button in the header instead
     function initPullToRefresh() {
-      const main = els.mainContent;
-
-      // Track when we're at the top
-      main.addEventListener('scroll', () => {
-        if (main.scrollTop <= 0) {
-          if (!isAtTop) {
-            isAtTop = true;
-            atTopSince = Date.now();
-          }
-        } else {
-          isAtTop = false;
-          atTopSince = 0;
-          isPulling = false;
-          els.pullIndicator.classList.remove('visible');
-        }
-      }, { passive: true });
-
-      main.addEventListener('touchstart', e => {
-        // Only allow pull if we've been at top for SETTLE_TIME
-        const settledAtTop = isAtTop && (Date.now() - atTopSince > SETTLE_TIME);
-        if (settledAtTop && main.scrollTop <= 0) {
-          pullStartY = e.touches[0].clientY;
-          isPulling = true;
-        } else {
-          isPulling = false;
-        }
-      }, { passive: true });
-
-      main.addEventListener('touchmove', e => {
-        if (!isPulling || main.scrollTop > 0) {
-          isPulling = false;
-          els.pullIndicator.classList.remove('visible');
-          return;
-        }
-
-        const currentY = e.touches[0].clientY;
-        const pullDistance = currentY - pullStartY;
-
-        // Only show if pulling DOWN (positive) past threshold
-        if (pullDistance > PULL_THRESHOLD) {
-          els.pullIndicator.classList.add('visible');
-        } else if (pullDistance < 50) {
-          els.pullIndicator.classList.remove('visible');
-        }
-      }, { passive: true });
-
-      main.addEventListener('touchend', () => {
-        if (isPulling && els.pullIndicator.classList.contains('visible')) {
-          fetchWeatherForActive();
-          setTimeout(() => els.pullIndicator.classList.remove('visible'), 1000);
-        } else {
-          els.pullIndicator.classList.remove('visible');
-        }
-        isPulling = false;
-      });
-
-      main.addEventListener('touchcancel', () => {
-        els.pullIndicator.classList.remove('visible');
-        isPulling = false;
-      });
-
-      // Initialize atTop state
-      if (main.scrollTop <= 0) {
-        isAtTop = true;
-        atTopSince = Date.now();
-      }
+      // Pull-to-refresh disabled to prevent accidental refreshes when scrolling
+      // Users can use the refresh button (↻) in the header to manually refresh
     }
 
     // ==================== EVENTS ====================
