@@ -638,6 +638,7 @@ function getMoonPhase(date: Date): {
   phase: string;
   illumination: number;
   emoji: string;
+  zodiac: { sign: string; emoji: string };
 } {
   // Simplified moon phase calculation
   const year = date.getFullYear();
@@ -697,7 +698,53 @@ function getMoonPhase(date: Date): {
     illumination = 50 - Math.round((phase - 24.0) / 5.53 * 50);
   }
 
-  return { phase: phaseName, illumination, emoji };
+  // Calculate zodiac sign for the moon
+  const zodiac = getMoonZodiac(date);
+
+  return { phase: phaseName, illumination, emoji, zodiac };
+}
+
+// Calculate which zodiac sign the moon is in
+function getMoonZodiac(date: Date): { sign: string; emoji: string } {
+  // Simplified calculation based on moon's position in the zodiac
+  // The moon moves through all 12 signs in ~27.3 days (sidereal month)
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const hour = date.getHours();
+
+  // Calculate Julian Day
+  let jd: number;
+  if (month < 3) {
+    jd = Math.floor(365.25 * (year - 1 + 4716)) + Math.floor(30.6001 * (month + 12 + 1)) + day - 1524.5;
+  } else {
+    jd = Math.floor(365.25 * (year + 4716)) + Math.floor(30.6001 * (month + 1)) + day - 1524.5;
+  }
+  jd += hour / 24;
+
+  // Calculate moon's mean longitude (simplified)
+  const T = (jd - 2451545.0) / 36525;
+  const L = (218.3164477 + 481267.88123421 * T) % 360;
+  const moonLongitude = L < 0 ? L + 360 : L;
+
+  // Determine zodiac sign (each sign is 30 degrees)
+  const signIndex = Math.floor(moonLongitude / 30);
+  const signs = [
+    { sign: 'Aries', emoji: '♈' },
+    { sign: 'Taurus', emoji: '♉' },
+    { sign: 'Gemini', emoji: '♊' },
+    { sign: 'Cancer', emoji: '♋' },
+    { sign: 'Leo', emoji: '♌' },
+    { sign: 'Virgo', emoji: '♍' },
+    { sign: 'Libra', emoji: '♎' },
+    { sign: 'Scorpio', emoji: '♏' },
+    { sign: 'Sagittarius', emoji: '♐' },
+    { sign: 'Capricorn', emoji: '♑' },
+    { sign: 'Aquarius', emoji: '♒' },
+    { sign: 'Pisces', emoji: '♓' },
+  ];
+
+  return signs[signIndex] || signs[0];
 }
 
 function addMinutes(timeStr: string, minutes: number): string {

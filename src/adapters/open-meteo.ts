@@ -53,12 +53,19 @@ interface OpenMeteoResponse {
     apparent_temperature: number[];
     precipitation_probability: number[];
     precipitation: number[];
+    rain: number[];
+    showers: number[];
+    snowfall: number[];
     weather_code: number[];
     cloud_cover: number[];
     pressure_msl: number[];
     wind_speed_10m: number[];
     wind_direction_10m: number[];
+    wind_gusts_10m: number[];
     uv_index: number[];
+    cape: number[];
+    visibility: number[];
+    freezing_level_height: number[];
   };
   daily?: {
     time: string[];
@@ -71,8 +78,13 @@ interface OpenMeteoResponse {
     sunset: string[];
     uv_index_max: number[];
     precipitation_sum: number[];
+    rain_sum: number[];
+    showers_sum: number[];
+    snowfall_sum: number[];
+    precipitation_hours: number[];
     precipitation_probability_max: number[];
     wind_speed_10m_max: number[];
+    wind_gusts_10m_max: number[];
     wind_direction_10m_dominant: number[];
   };
 }
@@ -124,12 +136,19 @@ export class OpenMeteoAdapter extends WeatherAdapter {
         'apparent_temperature',
         'precipitation_probability',
         'precipitation',
+        'rain',
+        'showers',
+        'snowfall',
         'weather_code',
         'cloud_cover',
         'pressure_msl',
         'wind_speed_10m',
         'wind_direction_10m',
+        'wind_gusts_10m',
         'uv_index',
+        'cape',
+        'visibility',
+        'freezing_level_height',
       ].join(','),
       daily: [
         'weather_code',
@@ -141,8 +160,13 @@ export class OpenMeteoAdapter extends WeatherAdapter {
         'sunset',
         'uv_index_max',
         'precipitation_sum',
+        'rain_sum',
+        'showers_sum',
+        'snowfall_sum',
+        'precipitation_hours',
         'precipitation_probability_max',
         'wind_speed_10m_max',
+        'wind_gusts_10m_max',
         'wind_direction_10m_dominant',
       ].join(','),
       timezone: 'auto',
@@ -218,12 +242,19 @@ export class OpenMeteoAdapter extends WeatherAdapter {
         pressure: h.pressure_msl[i],
         windSpeed: h.wind_speed_10m[i] / 3.6,
         windDirection: h.wind_direction_10m[i],
+        windGust: h.wind_gusts_10m?.[i] ? h.wind_gusts_10m[i] / 3.6 : undefined,
         precipitation: h.precipitation[i],
+        rain: h.rain?.[i],
+        showers: h.showers?.[i],
+        snowfall: h.snowfall?.[i],
         precipitationProbability: h.precipitation_probability[i],
         weatherCode: h.weather_code[i] as WeatherCode,
         weatherDescription: getWeatherDescription(h.weather_code[i] as WeatherCode),
         cloudCover: h.cloud_cover[i],
         uvIndex: h.uv_index[i],
+        cape: h.cape?.[i],
+        visibility: h.visibility?.[i],
+        freezingLevel: h.freezing_level_height?.[i],
       });
     }
 
@@ -247,8 +278,13 @@ export class OpenMeteoAdapter extends WeatherAdapter {
         humidity: 0, // Not provided in daily
         pressure: 0, // Not provided in daily
         windSpeed: d.wind_speed_10m_max[i] / 3.6,
+        windGust: d.wind_gusts_10m_max?.[i] ? d.wind_gusts_10m_max[i] / 3.6 : undefined,
         windDirection: d.wind_direction_10m_dominant[i],
         precipitation: d.precipitation_sum[i],
+        rain: d.rain_sum?.[i],
+        showers: d.showers_sum?.[i],
+        snowfall: d.snowfall_sum?.[i],
+        precipitationHours: d.precipitation_hours?.[i],
         precipitationProbability: d.precipitation_probability_max[i],
         weatherCode: d.weather_code[i] as WeatherCode,
         weatherDescription: getWeatherDescription(d.weather_code[i] as WeatherCode),

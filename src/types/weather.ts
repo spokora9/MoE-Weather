@@ -39,12 +39,19 @@ export interface HourlyForecast {
   pressure: number;
   windSpeed: number;
   windDirection: number;
+  windGust?: number;
   precipitation: number;
+  rain?: number;
+  showers?: number;
+  snowfall?: number;
   precipitationProbability: number;
   weatherCode: WeatherCode;
   weatherDescription: string;
   cloudCover: number;
   uvIndex?: number;
+  cape?: number; // Convective Available Potential Energy (storm energy)
+  visibility?: number;
+  freezingLevel?: number;
 }
 
 export interface DailyForecast {
@@ -58,8 +65,13 @@ export interface DailyForecast {
   humidity: number;
   pressure: number;
   windSpeed: number;
+  windGust?: number;
   windDirection: number;
   precipitation: number;
+  rain?: number;
+  showers?: number;
+  snowfall?: number;
+  precipitationHours?: number;
   precipitationProbability: number;
   weatherCode: WeatherCode;
   weatherDescription: string;
