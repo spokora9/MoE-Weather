@@ -601,6 +601,160 @@
     .pollen-chip.high { background: #fef3c7; color: #92400e; }
     .pollen-chip.very-high { background: #fee2e2; color: #991b1b; }
 
+    /* Feature Tabs */
+    .feature-tabs {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 8px 0;
+      margin-bottom: 8px;
+      scrollbar-width: none;
+    }
+    .feature-tabs::-webkit-scrollbar { display: none; }
+    .feature-tab {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-secondary);
+    }
+    .feature-tab.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+    .feature-tab:not(.active):hover {
+      background: var(--bg);
+    }
+    .feature-tab-icon { font-size: 16px; }
+
+    /* Sun/Moon Card */
+    .astro-card {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .astro-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .astro-item {
+      text-align: center;
+      flex: 1;
+    }
+    .astro-icon { font-size: 28px; margin-bottom: 4px; }
+    .astro-time { font-size: 16px; font-weight: 600; }
+    .astro-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; }
+    .moon-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--surface);
+      border-radius: 10px;
+      margin-top: 12px;
+    }
+    .moon-emoji { font-size: 32px; }
+    .moon-details { flex: 1; }
+    .moon-phase { font-size: 14px; font-weight: 600; }
+    .moon-illum { font-size: 12px; color: var(--text-secondary); }
+    .daylight-trend {
+      text-align: center;
+      padding: 10px;
+      background: var(--surface);
+      border-radius: 10px;
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .golden-hour {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .golden-item {
+      flex: 1;
+      padding: 10px;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      border-radius: 10px;
+      text-align: center;
+      color: white;
+    }
+    .golden-label { font-size: 10px; text-transform: uppercase; opacity: 0.9; }
+    .golden-time { font-size: 14px; font-weight: 600; }
+
+    /* Marine Card */
+    .marine-card {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .marine-conditions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .marine-rating {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      background: var(--surface);
+    }
+    .marine-info { flex: 1; }
+    .marine-status { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
+    .marine-desc { font-size: 12px; color: var(--text-secondary); }
+    .marine-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .marine-stat {
+      text-align: center;
+      padding: 10px;
+      background: var(--surface);
+      border-radius: 10px;
+    }
+    .marine-stat-value { font-size: 16px; font-weight: 600; }
+    .marine-stat-label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; }
+    .marine-activities {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .marine-activities-title { font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; }
+    .marine-activities-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .activity-chip {
+      font-size: 11px;
+      padding: 4px 10px;
+      background: #dcfce7;
+      color: #166534;
+      border-radius: 12px;
+    }
+    [data-theme="dark"] .activity-chip {
+      background: #166534;
+      color: #dcfce7;
+    }
+
     /* Utility */
     .hidden { display: none !important; }
   </style>
@@ -678,8 +832,21 @@
           </div>
         </div>
 
+        <!-- Feature Tabs -->
+        <div class="feature-tabs" id="featureTabs">
+          <div class="feature-tab active" data-feature="air">
+            <span class="feature-tab-icon">🌬️</span> Air
+          </div>
+          <div class="feature-tab" data-feature="sun">
+            <span class="feature-tab-icon">☀️</span> Sun/Moon
+          </div>
+          <div class="feature-tab" data-feature="marine">
+            <span class="feature-tab-icon">🌊</span> Marine
+          </div>
+        </div>
+
         <!-- Air Quality Card -->
-        <div class="section" id="aqiSection">
+        <div class="section" id="aqiSection" data-feature-content="air">
           <div class="section-header">
             <div class="section-title">Air Quality</div>
             <div class="section-toggle">▼</div>
@@ -687,6 +854,32 @@
           <div class="section-content">
             <div class="aqi-card" id="aqiCard">
               <div class="aqi-loading">Loading air quality...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sun/Moon Section -->
+        <div class="section hidden" id="astroSection" data-feature-content="sun">
+          <div class="section-header">
+            <div class="section-title">Sun & Moon</div>
+            <div class="section-toggle">▼</div>
+          </div>
+          <div class="section-content">
+            <div class="astro-card" id="astroCard">
+              <div class="aqi-loading">Loading astronomy data...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Marine Section -->
+        <div class="section hidden" id="marineSection" data-feature-content="marine">
+          <div class="section-header">
+            <div class="section-title">Marine Conditions</div>
+            <div class="section-toggle">▼</div>
+          </div>
+          <div class="section-content">
+            <div class="marine-card" id="marineCard">
+              <div class="aqi-loading">Loading marine data...</div>
             </div>
           </div>
         </div>
@@ -794,6 +987,8 @@
       weather: null,
       historical: null,
       airQuality: null,
+      astronomy: null,
+      marine: null,
       isOnline: navigator.onLine
     };
 
@@ -1019,6 +1214,10 @@
     // ==================== API ====================
     async function fetchWeather(lat, lon) {
       showLoading();
+      // Clear cached data for optional features when location changes
+      state.astronomy = null;
+      state.marine = null;
+
       try {
         const res = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
         if (!res.ok) throw new Error('Failed to fetch weather');
@@ -1029,6 +1228,14 @@
         // Fetch air quality and historical in parallel
         fetchAirQuality(lat, lon);
         fetchHistorical(lat, lon);
+
+        // Load astronomy if sun/moon tab is active
+        const activeTab = document.querySelector('.feature-tab.active');
+        if (activeTab?.dataset.feature === 'sun') {
+          fetchAstronomy(lat, lon);
+        } else if (activeTab?.dataset.feature === 'marine') {
+          fetchMarine(lat, lon);
+        }
       } catch (e) {
         showError(e.message);
       }
@@ -1150,6 +1357,165 @@
           windEl.className = 'quick-stat-avg below';
         }
       }
+    }
+
+    // Astronomy (Sun/Moon) fetch and render
+    async function fetchAstronomy(lat, lon) {
+      try {
+        const res = await fetch(`/api/astronomy?lat=${lat}&lon=${lon}`);
+        if (!res.ok) throw new Error('Failed to fetch astronomy');
+        const data = await res.json();
+        state.astronomy = data;
+        renderAstronomy(data);
+      } catch (e) {
+        $('astroCard').innerHTML = `<div class="aqi-loading">Astronomy data unavailable</div>`;
+      }
+    }
+
+    function renderAstronomy(data) {
+      if (!data.daily) {
+        $('astroCard').innerHTML = `<div class="aqi-loading">No astronomy data</div>`;
+        return;
+      }
+
+      const sunrise = data.daily.sunrise?.[0] ? new Date(data.daily.sunrise[0]) : null;
+      const sunset = data.daily.sunset?.[0] ? new Date(data.daily.sunset[0]) : null;
+      const formatTime = (d) => d ? d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '--';
+
+      const moon = data.moon || { phase: 'Unknown', illumination: 0, emoji: '🌙' };
+      const goldenHour = data.golden_hour;
+
+      let goldenHtml = '';
+      if (goldenHour) {
+        const morningStart = new Date(goldenHour.morning.start);
+        const eveningStart = new Date(goldenHour.evening.start);
+        goldenHtml = `
+          <div class="golden-hour">
+            <div class="golden-item">
+              <div class="golden-label">📷 Morning Golden</div>
+              <div class="golden-time">${formatTime(morningStart)}</div>
+            </div>
+            <div class="golden-item">
+              <div class="golden-label">📷 Evening Golden</div>
+              <div class="golden-time">${formatTime(eveningStart)}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      $('astroCard').innerHTML = `
+        <div class="astro-row">
+          <div class="astro-item">
+            <div class="astro-icon">🌅</div>
+            <div class="astro-time">${formatTime(sunrise)}</div>
+            <div class="astro-label">Sunrise</div>
+          </div>
+          <div class="astro-item">
+            <div class="astro-icon">🌇</div>
+            <div class="astro-time">${formatTime(sunset)}</div>
+            <div class="astro-label">Sunset</div>
+          </div>
+        </div>
+        <div class="moon-info">
+          <div class="moon-emoji">${moon.emoji}</div>
+          <div class="moon-details">
+            <div class="moon-phase">${moon.phase}</div>
+            <div class="moon-illum">${moon.illumination}% illuminated</div>
+          </div>
+        </div>
+        ${data.daylight_trend ? `<div class="daylight-trend">☀️ ${data.daylight_trend}</div>` : ''}
+        ${goldenHtml}
+      `;
+    }
+
+    // Marine fetch and render
+    async function fetchMarine(lat, lon) {
+      try {
+        const res = await fetch(`/api/marine?lat=${lat}&lon=${lon}`);
+        if (!res.ok) throw new Error('Failed to fetch marine');
+        const data = await res.json();
+        state.marine = data;
+        renderMarine(data);
+      } catch (e) {
+        $('marineCard').innerHTML = `<div class="aqi-loading">Marine data unavailable (location may be inland)</div>`;
+      }
+    }
+
+    function renderMarine(data) {
+      if (!data.current) {
+        $('marineCard').innerHTML = `<div class="aqi-loading">No marine data for this location</div>`;
+        return;
+      }
+
+      const conditions = data.conditions || { rating: 'Unknown', description: '', suitable_for: [] };
+      const waveEmoji = conditions.rating === 'Flat' ? '🏊' :
+                        conditions.rating === 'Small' ? '🏄' :
+                        conditions.rating === 'Medium' ? '🌊' :
+                        conditions.rating === 'Large' ? '⚠️' : '🚫';
+
+      $('marineCard').innerHTML = `
+        <div class="marine-conditions">
+          <div class="marine-rating">${waveEmoji}</div>
+          <div class="marine-info">
+            <div class="marine-status">${conditions.rating}</div>
+            <div class="marine-desc">${conditions.description}</div>
+          </div>
+        </div>
+        <div class="marine-stats">
+          <div class="marine-stat">
+            <div class="marine-stat-value">${(data.current.wave_height || 0).toFixed(1)}m</div>
+            <div class="marine-stat-label">Wave Height</div>
+          </div>
+          <div class="marine-stat">
+            <div class="marine-stat-value">${(data.current.wave_period || 0).toFixed(0)}s</div>
+            <div class="marine-stat-label">Wave Period</div>
+          </div>
+          <div class="marine-stat">
+            <div class="marine-stat-value">${(data.current.swell_wave_height || 0).toFixed(1)}m</div>
+            <div class="marine-stat-label">Swell</div>
+          </div>
+        </div>
+        ${conditions.suitable_for.length > 0 ? `
+          <div class="marine-activities">
+            <div class="marine-activities-title">Good for</div>
+            <div class="marine-activities-list">
+              ${conditions.suitable_for.map(a => `<span class="activity-chip">${a}</span>`).join('')}
+            </div>
+          </div>
+        ` : ''}
+      `;
+    }
+
+    // Feature tabs handling
+    function initFeatureTabs() {
+      const tabs = document.querySelectorAll('.feature-tab');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          // Update active tab
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          // Show/hide content sections
+          const feature = tab.dataset.feature;
+          document.querySelectorAll('[data-feature-content]').forEach(section => {
+            if (section.dataset.featureContent === feature) {
+              section.classList.remove('hidden');
+            } else {
+              section.classList.add('hidden');
+            }
+          });
+
+          // Lazy load data if needed
+          const loc = state.locations[state.activeIndex];
+          if (loc) {
+            if (feature === 'sun' && !state.astronomy) {
+              fetchAstronomy(loc.lat, loc.lon);
+            } else if (feature === 'marine' && !state.marine) {
+              fetchMarine(loc.lat, loc.lon);
+            }
+          }
+        });
+      });
     }
 
     function fetchWeatherForActive() {
@@ -1315,6 +1681,7 @@
       initSections();
       initEvents();
       initPullToRefresh();
+      initFeatureTabs();
 
       if (!navigator.onLine) {
         els.offlineBanner.classList.add('visible');

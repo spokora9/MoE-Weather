@@ -427,6 +427,301 @@ function getPollenRisk(current: Record<string, number>): { level: string; types:
   return { level, types: pollenTypes };
 }
 
+// Marine/Ocean API endpoint (waves, tides, sea conditions)
+const marineQuerySchema = z.object({
+  lat: z.coerce.number().min(-90).max(90),
+  lon: z.coerce.number().min(-180).max(180),
+});
+
+app.get('/api/marine', async (req: Request, res: Response) => {
+  try {
+    const query = marineQuerySchema.parse(req.query);
+
+    const params = new URLSearchParams({
+      latitude: query.lat.toString(),
+      longitude: query.lon.toString(),
+      current: [
+        'wave_height',
+        'wave_direction',
+        'wave_period',
+        'wind_wave_height',
+        'wind_wave_direction',
+        'wind_wave_period',
+        'swell_wave_height',
+        'swell_wave_direction',
+        'swell_wave_period',
+      ].join(','),
+      hourly: [
+        'wave_height',
+        'wave_direction',
+        'wave_period',
+        'swell_wave_height',
+        'swell_wave_period',
+      ].join(','),
+      daily: [
+        'wave_height_max',
+        'wave_direction_dominant',
+        'wave_period_max',
+      ].join(','),
+      forecast_days: '7',
+      timezone: 'auto',
+    });
+
+    const response = await fetch(
+      `https://marine-api.open-meteo.com/v1/marine?${params}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Marine API error: ${response.statusText}`);
+    }
+
+    const data = await response.json() as {
+      current?: Record<string, number>;
+      hourly?: Record<string, number[]>;
+      daily?: Record<string, (number | string)[]>;
+      [key: string]: unknown;
+    };
+
+    // Add surf conditions assessment
+    const surfConditions = data.current ? getSurfConditions(
+      data.current.wave_height as number,
+      data.current.wave_period as number,
+      data.current.swell_wave_height as number
+    ) : null;
+
+    res.json({
+      ...data,
+      conditions: surfConditions,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({
+        error: 'Invalid request parameters',
+        details: error.errors,
+      });
+    } else {
+      console.error('[API] Marine error:', error);
+      res.status(500).json({
+        error: 'Failed to fetch marine data',
+        message: (error as Error).message,
+      });
+    }
+  }
+});
+
+// Sun/Moon data endpoint
+const astronomyQuerySchema = z.object({
+  lat: z.coerce.number().min(-90).max(90),
+  lon: z.coerce.number().min(-180).max(180),
+});
+
+app.get('/api/astronomy', async (req: Request, res: Response) => {
+  try {
+    const query = astronomyQuerySchema.parse(req.query);
+
+    // Get sunrise/sunset from forecast API
+    const params = new URLSearchParams({
+      latitude: query.lat.toString(),
+      longitude: query.lon.toString(),
+      daily: [
+        'sunrise',
+        'sunset',
+        'daylight_duration',
+        'sunshine_duration',
+        'uv_index_max',
+      ].join(','),
+      timezone: 'auto',
+      forecast_days: '7',
+    });
+
+    const response = await fetch(
+      `https://api.open-meteo.com/v1/forecast?${params}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Astronomy API error: ${response.statusText}`);
+    }
+
+    const data = await response.json() as {
+      daily?: {
+        time?: string[];
+        sunrise?: string[];
+        sunset?: string[];
+        daylight_duration?: number[];
+        sunshine_duration?: number[];
+        uv_index_max?: number[];
+      };
+      [key: string]: unknown;
+    };
+
+    // Calculate moon phase (simplified algorithm)
+    const moonPhase = getMoonPhase(new Date());
+
+    // Calculate golden hour times
+    const today = data.daily;
+    const goldenHour = today?.sunrise?.[0] && today?.sunset?.[0] ? {
+      morning: {
+        start: today.sunrise[0],
+        end: addMinutes(today.sunrise[0], 60),
+      },
+      evening: {
+        start: addMinutes(today.sunset[0], -60),
+        end: today.sunset[0],
+      },
+    } : null;
+
+    res.json({
+      daily: data.daily,
+      moon: moonPhase,
+      golden_hour: goldenHour,
+      daylight_trend: calculateDaylightTrend(data.daily?.daylight_duration),
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({
+        error: 'Invalid request parameters',
+        details: error.errors,
+      });
+    } else {
+      console.error('[API] Astronomy error:', error);
+      res.status(500).json({
+        error: 'Failed to fetch astronomy data',
+        message: (error as Error).message,
+      });
+    }
+  }
+});
+
+// Helper functions for Marine API
+function getSurfConditions(waveHeight: number, wavePeriod: number, swellHeight: number): {
+  rating: string;
+  description: string;
+  suitable_for: string[];
+} {
+  const totalWave = (waveHeight || 0) + (swellHeight || 0) * 0.5;
+
+  if (totalWave < 0.3) {
+    return {
+      rating: 'Flat',
+      description: 'Very calm waters, minimal wave activity',
+      suitable_for: ['Swimming', 'Paddleboarding', 'Kayaking'],
+    };
+  } else if (totalWave < 1.0) {
+    return {
+      rating: 'Small',
+      description: 'Light waves, good for beginners',
+      suitable_for: ['Beginner surfing', 'Bodyboarding', 'Swimming'],
+    };
+  } else if (totalWave < 2.0) {
+    return {
+      rating: 'Medium',
+      description: 'Moderate waves, fun conditions',
+      suitable_for: ['Intermediate surfing', 'Bodyboarding'],
+    };
+  } else if (totalWave < 3.5) {
+    return {
+      rating: 'Large',
+      description: 'Significant waves, experienced surfers only',
+      suitable_for: ['Advanced surfing', 'Experienced swimmers'],
+    };
+  } else {
+    return {
+      rating: 'Very Large',
+      description: 'Dangerous conditions, stay out of water',
+      suitable_for: ['Expert surfers only', 'Shore watching'],
+    };
+  }
+}
+
+// Moon phase calculation
+function getMoonPhase(date: Date): {
+  phase: string;
+  illumination: number;
+  emoji: string;
+} {
+  // Simplified moon phase calculation
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+
+  let c = 0, e = 0, jd = 0, b = 0;
+
+  if (month < 3) {
+    c = 4716;
+    e = 1;
+  } else {
+    c = 4716;
+    e = -1;
+  }
+
+  jd = Math.floor(365.25 * (year + c)) + Math.floor(30.6001 * (month + e)) + day - 1524.5;
+  const daysSinceNew = jd - 2451549.5;
+  const newMoons = daysSinceNew / 29.53059;
+  const phase = (newMoons - Math.floor(newMoons)) * 29.53059;
+
+  let phaseName: string;
+  let emoji: string;
+  let illumination: number;
+
+  if (phase < 1.85) {
+    phaseName = 'New Moon';
+    emoji = '🌑';
+    illumination = 0;
+  } else if (phase < 7.38) {
+    phaseName = 'Waxing Crescent';
+    emoji = '🌒';
+    illumination = Math.round((phase - 1.85) / 5.53 * 50);
+  } else if (phase < 9.23) {
+    phaseName = 'First Quarter';
+    emoji = '🌓';
+    illumination = 50;
+  } else if (phase < 14.77) {
+    phaseName = 'Waxing Gibbous';
+    emoji = '🌔';
+    illumination = 50 + Math.round((phase - 9.23) / 5.54 * 50);
+  } else if (phase < 16.61) {
+    phaseName = 'Full Moon';
+    emoji = '🌕';
+    illumination = 100;
+  } else if (phase < 22.15) {
+    phaseName = 'Waning Gibbous';
+    emoji = '🌖';
+    illumination = 100 - Math.round((phase - 16.61) / 5.54 * 50);
+  } else if (phase < 24.0) {
+    phaseName = 'Last Quarter';
+    emoji = '🌗';
+    illumination = 50;
+  } else {
+    phaseName = 'Waning Crescent';
+    emoji = '🌘';
+    illumination = 50 - Math.round((phase - 24.0) / 5.53 * 50);
+  }
+
+  return { phase: phaseName, illumination, emoji };
+}
+
+function addMinutes(timeStr: string, minutes: number): string {
+  const date = new Date(timeStr);
+  date.setMinutes(date.getMinutes() + minutes);
+  return date.toISOString();
+}
+
+function calculateDaylightTrend(daylightDurations?: number[]): string | null {
+  if (!daylightDurations || daylightDurations.length < 2) return null;
+
+  const today = daylightDurations[0];
+  const tomorrow = daylightDurations[1];
+  const diff = tomorrow - today;
+
+  if (Math.abs(diff) < 30) {
+    return 'Stable daylight hours';
+  } else if (diff > 0) {
+    return `Gaining ${Math.round(diff / 60)} min/day`;
+  } else {
+    return `Losing ${Math.round(Math.abs(diff) / 60)} min/day`;
+  }
+}
+
 // Cache management endpoints
 app.post('/api/cache/clear', (_req: Request, res: Response) => {
   orchestrator.clearCache();
@@ -513,13 +808,13 @@ app.listen(PORT, () => {
 ║   Server running at http://localhost:${PORT}                           ║
 ║                                                                       ║
 ║   Endpoints:                                                          ║
-║   • GET  /api/weather?lat=&lon=     - Get weather data                ║
+║   • GET  /api/weather?lat=&lon=     - Weather data                    ║
 ║   • GET  /api/geocode?q=            - Search locations                ║
 ║   • GET  /api/air-quality?lat=&lon= - Air quality & pollen            ║
-║   • GET  /api/historical?lat=&lon=  - Historical averages (10/30 day) ║
+║   • GET  /api/historical?lat=&lon=  - Historical averages             ║
+║   • GET  /api/marine?lat=&lon=      - Waves, tides, surf conditions   ║
+║   • GET  /api/astronomy?lat=&lon=   - Sun, moon, golden hour          ║
 ║   • GET  /api/health                - Health check                    ║
-║   • GET  /api/cache/stats           - Cache statistics                ║
-║   • POST /api/cache/clear           - Clear cache                     ║
 ║                                                                       ║
 ╚═══════════════════════════════════════════════════════════════════════╝
   `);
