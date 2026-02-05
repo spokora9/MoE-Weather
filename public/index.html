@@ -1033,6 +1033,9 @@
         <div class="footer-meta">
           <div class="sources-list" id="sourcesList"></div>
         </div>
+        <div class="footer-meta" style="font-size:10px;opacity:0.5;">
+          v2.1 - Historical/Astronomy/Marine
+        </div>
       </div>
     </main>
   </div>
@@ -1362,11 +1365,19 @@
     }
 
     async function fetchHistorical(lat, lon) {
+      // Show loading state
+      const humidityEl = $('statHumidityAvg');
+      const windEl = $('statWindAvg');
+      if (humidityEl) humidityEl.textContent = 'loading...';
+      if (windEl) windEl.textContent = 'loading...';
+
       try {
         const res = await fetch(`/api/historical?lat=${lat}&lon=${lon}&days=30`);
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
           console.error('Historical API error:', res.status, errData);
+          if (humidityEl) humidityEl.textContent = '';
+          if (windEl) windEl.textContent = '';
           return;
         }
         const data = await res.json();
@@ -1375,6 +1386,8 @@
         renderHistoricalComparison(data);
       } catch (e) {
         console.error('Historical fetch error:', e);
+        if (humidityEl) humidityEl.textContent = '';
+        if (windEl) windEl.textContent = '';
       }
     }
 
