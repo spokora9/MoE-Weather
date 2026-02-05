@@ -518,6 +518,89 @@
     }
     .offline-banner.visible { display: block; }
 
+    /* Historical Comparison */
+    .quick-stat-avg {
+      font-size: 10px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+    .quick-stat-avg.above { color: #ef4444; }
+    .quick-stat-avg.below { color: #3b82f6; }
+    .quick-stat-avg.normal { color: var(--success); }
+
+    /* AQI Card */
+    .aqi-card {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .aqi-loading {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 13px;
+      padding: 20px;
+    }
+    .aqi-main {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+    .aqi-gauge {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: white;
+      font-weight: 700;
+    }
+    .aqi-value { font-size: 24px; line-height: 1; }
+    .aqi-label-small { font-size: 10px; font-weight: 500; opacity: 0.9; }
+    .aqi-info { flex: 1; }
+    .aqi-status { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .aqi-recommendation { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+    .aqi-details {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .aqi-detail {
+      text-align: center;
+    }
+    .aqi-detail-value { font-size: 14px; font-weight: 600; }
+    .aqi-detail-label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; }
+    .pollen-section {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .pollen-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .pollen-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .pollen-chip {
+      font-size: 11px;
+      padding: 4px 10px;
+      background: var(--surface);
+      border-radius: 12px;
+      color: var(--text-secondary);
+    }
+    .pollen-chip.high { background: #fef3c7; color: #92400e; }
+    .pollen-chip.very-high { background: #fee2e2; color: #991b1b; }
+
     /* Utility */
     .hidden { display: none !important; }
   </style>
@@ -580,16 +663,31 @@
             <div class="quick-stat-icon">💧</div>
             <div class="quick-stat-value" id="statHumidity">--%</div>
             <div class="quick-stat-label">Humidity</div>
+            <div class="quick-stat-avg" id="statHumidityAvg"></div>
           </div>
           <div class="quick-stat">
             <div class="quick-stat-icon">💨</div>
             <div class="quick-stat-value" id="statWind">-- m/s</div>
             <div class="quick-stat-label">Wind</div>
+            <div class="quick-stat-avg" id="statWindAvg"></div>
           </div>
           <div class="quick-stat">
             <div class="quick-stat-icon">🌧️</div>
             <div class="quick-stat-value" id="statPrecip">--%</div>
             <div class="quick-stat-label">Precip</div>
+          </div>
+        </div>
+
+        <!-- Air Quality Card -->
+        <div class="section" id="aqiSection">
+          <div class="section-header">
+            <div class="section-title">Air Quality</div>
+            <div class="section-toggle">▼</div>
+          </div>
+          <div class="section-content">
+            <div class="aqi-card" id="aqiCard">
+              <div class="aqi-loading">Loading air quality...</div>
+            </div>
           </div>
         </div>
 
@@ -694,6 +792,8 @@
       locations: [],
       activeIndex: 0,
       weather: null,
+      historical: null,
+      airQuality: null,
       isOnline: navigator.onLine
     };
 
@@ -925,8 +1025,130 @@
         const data = await res.json();
         state.weather = data;
         renderWeather(data);
+
+        // Fetch air quality and historical in parallel
+        fetchAirQuality(lat, lon);
+        fetchHistorical(lat, lon);
       } catch (e) {
         showError(e.message);
+      }
+    }
+
+    async function fetchAirQuality(lat, lon) {
+      try {
+        const res = await fetch(`/api/air-quality?lat=${lat}&lon=${lon}`);
+        if (!res.ok) throw new Error('Failed to fetch air quality');
+        const data = await res.json();
+        renderAirQuality(data);
+      } catch (e) {
+        $('aqiCard').innerHTML = `<div class="aqi-loading">Air quality unavailable</div>`;
+      }
+    }
+
+    async function fetchHistorical(lat, lon) {
+      try {
+        const res = await fetch(`/api/historical?lat=${lat}&lon=${lon}&days=10`);
+        if (!res.ok) throw new Error('Failed to fetch historical');
+        const data = await res.json();
+        state.historical = data;
+        renderHistoricalComparison(data);
+      } catch (e) {
+        // Silently fail, historical comparison is optional
+        console.log('Historical data unavailable');
+      }
+    }
+
+    function renderAirQuality(data) {
+      if (!data.current) {
+        $('aqiCard').innerHTML = `<div class="aqi-loading">No air quality data</div>`;
+        return;
+      }
+
+      const aqi = data.current.us_aqi || 0;
+      const color = data.current.us_aqi_color || '#888';
+      const label = data.current.us_aqi_label || 'Unknown';
+      const recommendation = data.current.health_recommendation || '';
+      const pollen = data.current.pollen_risk || { level: 'Low', types: [] };
+
+      let pollenHtml = '';
+      if (pollen.types.length > 0) {
+        const chipClass = pollen.level === 'Very High' ? 'very-high' : pollen.level === 'High' ? 'high' : '';
+        pollenHtml = `
+          <div class="pollen-section">
+            <div class="pollen-title">🌸 Pollen (${pollen.level})</div>
+            <div class="pollen-chips">
+              ${pollen.types.map(t => `<span class="pollen-chip ${chipClass}">${t}</span>`).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      $('aqiCard').innerHTML = `
+        <div class="aqi-main">
+          <div class="aqi-gauge" style="background: ${color}">
+            <div class="aqi-value">${aqi}</div>
+            <div class="aqi-label-small">AQI</div>
+          </div>
+          <div class="aqi-info">
+            <div class="aqi-status">${label}</div>
+            <div class="aqi-recommendation">${recommendation}</div>
+          </div>
+        </div>
+        <div class="aqi-details">
+          <div class="aqi-detail">
+            <div class="aqi-detail-value">${(data.current.pm2_5 || 0).toFixed(0)}</div>
+            <div class="aqi-detail-label">PM2.5</div>
+          </div>
+          <div class="aqi-detail">
+            <div class="aqi-detail-value">${(data.current.pm10 || 0).toFixed(0)}</div>
+            <div class="aqi-detail-label">PM10</div>
+          </div>
+          <div class="aqi-detail">
+            <div class="aqi-detail-value">${data.current.uv_index ? data.current.uv_index.toFixed(1) : '--'}</div>
+            <div class="aqi-detail-label">UV Index</div>
+          </div>
+        </div>
+        ${pollenHtml}
+      `;
+    }
+
+    function renderHistoricalComparison(data) {
+      if (!data || !state.weather) return;
+
+      // Humidity comparison
+      const currentHumidity = state.weather.current.humidity;
+      const avgHumidity = data.humidity.avg;
+      if (avgHumidity) {
+        const humidityDiff = currentHumidity - avgHumidity;
+        const humidityEl = $('statHumidityAvg');
+        if (Math.abs(humidityDiff) < 5) {
+          humidityEl.textContent = '≈ avg';
+          humidityEl.className = 'quick-stat-avg normal';
+        } else if (humidityDiff > 0) {
+          humidityEl.textContent = `↑ +${humidityDiff.toFixed(0)}% vs avg`;
+          humidityEl.className = 'quick-stat-avg above';
+        } else {
+          humidityEl.textContent = `↓ ${humidityDiff.toFixed(0)}% vs avg`;
+          humidityEl.className = 'quick-stat-avg below';
+        }
+      }
+
+      // Wind comparison
+      const currentWind = state.weather.current.windSpeed;
+      const avgWind = data.wind.avg_max ? data.wind.avg_max / 3.6 : null; // Convert km/h to m/s
+      if (avgWind) {
+        const windDiff = currentWind - avgWind;
+        const windEl = $('statWindAvg');
+        if (Math.abs(windDiff) < 1) {
+          windEl.textContent = '≈ avg';
+          windEl.className = 'quick-stat-avg normal';
+        } else if (windDiff > 0) {
+          windEl.textContent = `↑ +${windDiff.toFixed(1)} vs avg`;
+          windEl.className = 'quick-stat-avg above';
+        } else {
+          windEl.textContent = `↓ ${windDiff.toFixed(1)} vs avg`;
+          windEl.className = 'quick-stat-avg below';
+        }
       }
     }
 

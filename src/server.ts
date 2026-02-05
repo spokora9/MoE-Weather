@@ -172,6 +172,261 @@ app.get('/api/geocode', async (req: Request, res: Response) => {
   }
 });
 
+// Air Quality endpoint (Open-Meteo Air Quality API)
+const airQualityQuerySchema = z.object({
+  lat: z.coerce.number().min(-90).max(90),
+  lon: z.coerce.number().min(-180).max(180),
+});
+
+app.get('/api/air-quality', async (req: Request, res: Response) => {
+  try {
+    const query = airQualityQuerySchema.parse(req.query);
+
+    const params = new URLSearchParams({
+      latitude: query.lat.toString(),
+      longitude: query.lon.toString(),
+      current: [
+        'us_aqi',
+        'european_aqi',
+        'pm10',
+        'pm2_5',
+        'carbon_monoxide',
+        'nitrogen_dioxide',
+        'sulphur_dioxide',
+        'ozone',
+        'dust',
+        'uv_index',
+        'ammonia',
+        'alder_pollen',
+        'birch_pollen',
+        'grass_pollen',
+        'mugwort_pollen',
+        'olive_pollen',
+        'ragweed_pollen',
+      ].join(','),
+      hourly: [
+        'us_aqi',
+        'pm2_5',
+        'pm10',
+        'uv_index',
+      ].join(','),
+      forecast_days: '3',
+      timezone: 'auto',
+    });
+
+    const response = await fetch(
+      `https://air-quality-api.open-meteo.com/v1/air-quality?${params}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Air Quality API error: ${response.statusText}`);
+    }
+
+    const data = await response.json() as {
+      current?: Record<string, number>;
+      hourly?: Record<string, number[]>;
+      [key: string]: unknown;
+    };
+
+    // Add AQI category labels
+    const aqiData = {
+      ...data,
+      current: data.current ? {
+        ...data.current,
+        us_aqi_label: getAqiLabel(data.current.us_aqi || 0),
+        us_aqi_color: getAqiColor(data.current.us_aqi || 0),
+        health_recommendation: getHealthRecommendation(data.current.us_aqi || 0),
+        pollen_risk: getPollenRisk(data.current),
+      } : null,
+    };
+
+    res.json(aqiData);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({
+        error: 'Invalid request parameters',
+        details: error.errors,
+      });
+    } else {
+      console.error('[API] Air Quality error:', error);
+      res.status(500).json({
+        error: 'Failed to fetch air quality data',
+        message: (error as Error).message,
+      });
+    }
+  }
+});
+
+// Historical averages endpoint (Open-Meteo Historical API)
+app.get('/api/historical', async (req: Request, res: Response) => {
+  try {
+    const query = historicalQuerySchema.parse(req.query);
+
+    // Calculate date range (past N days)
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() - 1); // Yesterday
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - query.days);
+
+    const formatDate = (d: Date) => d.toISOString().split('T')[0];
+
+    const params = new URLSearchParams({
+      latitude: query.lat.toString(),
+      longitude: query.lon.toString(),
+      start_date: formatDate(startDate),
+      end_date: formatDate(endDate),
+      daily: [
+        'temperature_2m_max',
+        'temperature_2m_min',
+        'temperature_2m_mean',
+        'precipitation_sum',
+        'rain_sum',
+        'snowfall_sum',
+        'precipitation_hours',
+        'wind_speed_10m_max',
+        'wind_gusts_10m_max',
+        'wind_direction_10m_dominant',
+        'shortwave_radiation_sum',
+        'et0_fao_evapotranspiration',
+      ].join(','),
+      hourly: [
+        'relative_humidity_2m',
+        'pressure_msl',
+        'cloud_cover',
+      ].join(','),
+      timezone: 'auto',
+    });
+
+    const response = await fetch(
+      `https://archive-api.open-meteo.com/v1/archive?${params}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Historical API error: ${response.statusText}`);
+    }
+
+    const data = await response.json() as {
+      daily?: {
+        temperature_2m_max?: number[];
+        temperature_2m_min?: number[];
+        temperature_2m_mean?: number[];
+        precipitation_sum?: number[];
+        wind_speed_10m_max?: number[];
+      };
+      hourly?: {
+        relative_humidity_2m?: number[];
+        pressure_msl?: number[];
+        cloud_cover?: number[];
+      };
+    };
+
+    // Calculate averages
+    const calcAvg = (arr?: number[]) => {
+      if (!arr || arr.length === 0) return null;
+      const valid = arr.filter(v => v !== null && v !== undefined);
+      return valid.length > 0 ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
+    };
+
+    const averages = {
+      period_days: query.days,
+      temperature: {
+        avg_high: calcAvg(data.daily?.temperature_2m_max),
+        avg_low: calcAvg(data.daily?.temperature_2m_min),
+        avg_mean: calcAvg(data.daily?.temperature_2m_mean),
+      },
+      humidity: {
+        avg: calcAvg(data.hourly?.relative_humidity_2m),
+      },
+      pressure: {
+        avg: calcAvg(data.hourly?.pressure_msl),
+      },
+      precipitation: {
+        avg_daily: calcAvg(data.daily?.precipitation_sum),
+        total: data.daily?.precipitation_sum?.reduce((a, b) => a + (b || 0), 0) || 0,
+      },
+      wind: {
+        avg_max: calcAvg(data.daily?.wind_speed_10m_max),
+      },
+      cloud_cover: {
+        avg: calcAvg(data.hourly?.cloud_cover),
+      },
+      raw: data,
+    };
+
+    res.json(averages);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({
+        error: 'Invalid request parameters',
+        details: error.errors,
+      });
+    } else {
+      console.error('[API] Historical error:', error);
+      res.status(500).json({
+        error: 'Failed to fetch historical data',
+        message: (error as Error).message,
+      });
+    }
+  }
+});
+
+// Helper functions for Air Quality
+function getAqiLabel(aqi: number): string {
+  if (aqi <= 50) return 'Good';
+  if (aqi <= 100) return 'Moderate';
+  if (aqi <= 150) return 'Unhealthy for Sensitive Groups';
+  if (aqi <= 200) return 'Unhealthy';
+  if (aqi <= 300) return 'Very Unhealthy';
+  return 'Hazardous';
+}
+
+function getAqiColor(aqi: number): string {
+  if (aqi <= 50) return '#00e400';
+  if (aqi <= 100) return '#ffff00';
+  if (aqi <= 150) return '#ff7e00';
+  if (aqi <= 200) return '#ff0000';
+  if (aqi <= 300) return '#8f3f97';
+  return '#7e0023';
+}
+
+function getHealthRecommendation(aqi: number): string {
+  if (aqi <= 50) return 'Air quality is good. Enjoy outdoor activities!';
+  if (aqi <= 100) return 'Acceptable air quality. Unusually sensitive people should limit prolonged outdoor exertion.';
+  if (aqi <= 150) return 'Sensitive groups should reduce prolonged outdoor exertion.';
+  if (aqi <= 200) return 'Everyone should reduce prolonged outdoor exertion. Sensitive groups should avoid outdoor activities.';
+  if (aqi <= 300) return 'Everyone should avoid prolonged outdoor exertion. Sensitive groups should remain indoors.';
+  return 'Health alert! Everyone should avoid all outdoor activities.';
+}
+
+function getPollenRisk(current: Record<string, number>): { level: string; types: string[] } {
+  const pollenTypes: string[] = [];
+  let maxPollen = 0;
+
+  const pollenFields = [
+    { key: 'alder_pollen', name: 'Alder' },
+    { key: 'birch_pollen', name: 'Birch' },
+    { key: 'grass_pollen', name: 'Grass' },
+    { key: 'mugwort_pollen', name: 'Mugwort' },
+    { key: 'olive_pollen', name: 'Olive' },
+    { key: 'ragweed_pollen', name: 'Ragweed' },
+  ];
+
+  for (const { key, name } of pollenFields) {
+    const value = current[key];
+    if (value && value > 10) {
+      pollenTypes.push(name);
+      maxPollen = Math.max(maxPollen, value);
+    }
+  }
+
+  let level = 'Low';
+  if (maxPollen > 100) level = 'Very High';
+  else if (maxPollen > 50) level = 'High';
+  else if (maxPollen > 20) level = 'Moderate';
+
+  return { level, types: pollenTypes };
+}
+
 // Cache management endpoints
 app.post('/api/cache/clear', (_req: Request, res: Response) => {
   orchestrator.clearCache();
@@ -251,20 +506,22 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`
-╔══════════════════════════════════════════════════════════════════╗
-║                                                                  ║
-║   🌤️  MoE Weather API Server                                    ║
-║                                                                  ║
-║   Server running at http://localhost:${PORT}                      ║
-║                                                                  ║
-║   Endpoints:                                                     ║
-║   • GET  /api/weather?lat=&lon=  - Get weather data              ║
-║   • GET  /api/geocode?q=         - Search locations              ║
-║   • GET  /api/health             - Health check                  ║
-║   • GET  /api/cache/stats        - Cache statistics              ║
-║   • POST /api/cache/clear        - Clear cache                   ║
-║                                                                  ║
-╚══════════════════════════════════════════════════════════════════╝
+╔═══════════════════════════════════════════════════════════════════════╗
+║                                                                       ║
+║   🌤️  MoE Weather API Server                                         ║
+║                                                                       ║
+║   Server running at http://localhost:${PORT}                           ║
+║                                                                       ║
+║   Endpoints:                                                          ║
+║   • GET  /api/weather?lat=&lon=     - Get weather data                ║
+║   • GET  /api/geocode?q=            - Search locations                ║
+║   • GET  /api/air-quality?lat=&lon= - Air quality & pollen            ║
+║   • GET  /api/historical?lat=&lon=  - Historical averages (10/30 day) ║
+║   • GET  /api/health                - Health check                    ║
+║   • GET  /api/cache/stats           - Cache statistics                ║
+║   • POST /api/cache/clear           - Clear cache                     ║
+║                                                                       ║
+╚═══════════════════════════════════════════════════════════════════════╝
   `);
 });
 
