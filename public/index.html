@@ -1062,46 +1062,71 @@
       ACTIVE: 'moe_active_location',
       THEME: 'moe_theme'
     };
-    // Meteocons icon mapping (WMO weather codes to Meteocons)
-    // Using basmilius/weather-icons from jsDelivr CDN
-    const METEOCONS_BASE = 'https://cdn.jsdelivr.net/npm/@bybas/weather-icons@latest/production/fill/svg/';
-    const ICON_MAP = {
-      0: 'clear-day',           // Clear sky
-      1: 'clear-day',           // Mainly clear
-      2: 'partly-cloudy-day',   // Partly cloudy
-      3: 'overcast',            // Overcast
-      45: 'fog',                // Fog
-      48: 'fog',                // Depositing rime fog
-      51: 'drizzle',            // Light drizzle
-      53: 'drizzle',            // Moderate drizzle
-      55: 'drizzle',            // Dense drizzle
-      56: 'sleet',              // Freezing drizzle light
-      57: 'sleet',              // Freezing drizzle dense
-      61: 'rain',               // Slight rain
-      63: 'rain',               // Moderate rain
-      65: 'rain',               // Heavy rain
-      66: 'sleet',              // Freezing rain light
-      67: 'sleet',              // Freezing rain heavy
-      71: 'snow',               // Slight snow
-      73: 'snow',               // Moderate snow
-      75: 'snow',               // Heavy snow
-      77: 'snow',               // Snow grains
-      80: 'partly-cloudy-day-rain', // Rain showers slight
-      81: 'rain',               // Rain showers moderate
-      82: 'thunderstorms-rain', // Rain showers violent
-      85: 'snow',               // Snow showers slight
-      86: 'snow',               // Snow showers heavy
-      95: 'thunderstorms',      // Thunderstorm
-      96: 'thunderstorms',      // Thunderstorm with hail
-      99: 'thunderstorms',      // Thunderstorm with heavy hail
+    // Weather icon system with inline SVG fallbacks
+    // Primary: basmilius/weather-icons from raw GitHub
+    // Fallback: Clean inline SVG icons
+    const METEOCONS_BASE = 'https://raw.githubusercontent.com/basmilius/weather-icons/dev/production/fill/svg/';
+
+    // Inline SVG fallback icons (simple, clean designs)
+    const SVG_FALLBACKS = {
+      sun: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`,
+      cloud: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg>`,
+      partlyCloudy: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v2m4.22.78l1.42 1.42M20 12h2M17.64 17.64l1.42 1.42M12 20v2m-5.64-3.64l-1.42 1.42M2 12h2m2.22-6.22L4.8 4.36"/><circle cx="12" cy="10" r="4"/><path d="M16 14h1a4 4 0 010 8H8a5 5 0 01-.5-9.97"/></svg>`,
+      rain: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 13V7a4 4 0 00-8 0v6m-2 0a6 6 0 0012 0"/><path d="M8 19v2m4-3v2m4-1v2" stroke-linecap="round"/></svg>`,
+      drizzle: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/><path d="M8 19v1m4-2v1m4-1v1" stroke-linecap="round"/></svg>`,
+      snow: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/><path d="M12 14v2m0 2v2M9 17h6" stroke-linecap="round"/></svg>`,
+      thunder: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/><path d="M13 11l-2 4h3l-2 4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      fog: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10h16M4 14h16M4 18h12" stroke-linecap="round"/></svg>`,
+      sleet: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/><circle cx="9" cy="18" r="1"/><path d="M13 17v2" stroke-linecap="round"/><circle cx="17" cy="19" r="1"/></svg>`,
+      unknown: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v.01M12 12a2 2 0 10-2-2" stroke-linecap="round"/></svg>`
     };
+
+    const ICON_MAP = {
+      0: { name: 'clear-day', fallback: 'sun' },           // Clear sky
+      1: { name: 'clear-day', fallback: 'sun' },           // Mainly clear
+      2: { name: 'partly-cloudy-day', fallback: 'partlyCloudy' }, // Partly cloudy
+      3: { name: 'overcast', fallback: 'cloud' },          // Overcast
+      45: { name: 'fog', fallback: 'fog' },                // Fog
+      48: { name: 'fog', fallback: 'fog' },                // Depositing rime fog
+      51: { name: 'drizzle', fallback: 'drizzle' },        // Light drizzle
+      53: { name: 'drizzle', fallback: 'drizzle' },        // Moderate drizzle
+      55: { name: 'drizzle', fallback: 'rain' },           // Dense drizzle
+      56: { name: 'sleet', fallback: 'sleet' },            // Freezing drizzle light
+      57: { name: 'sleet', fallback: 'sleet' },            // Freezing drizzle dense
+      61: { name: 'rain', fallback: 'rain' },              // Slight rain
+      63: { name: 'rain', fallback: 'rain' },              // Moderate rain
+      65: { name: 'rain', fallback: 'rain' },              // Heavy rain
+      66: { name: 'sleet', fallback: 'sleet' },            // Freezing rain light
+      67: { name: 'sleet', fallback: 'sleet' },            // Freezing rain heavy
+      71: { name: 'snow', fallback: 'snow' },              // Slight snow
+      73: { name: 'snow', fallback: 'snow' },              // Moderate snow
+      75: { name: 'snow', fallback: 'snow' },              // Heavy snow
+      77: { name: 'snow', fallback: 'snow' },              // Snow grains
+      80: { name: 'partly-cloudy-day-rain', fallback: 'drizzle' }, // Rain showers slight
+      81: { name: 'rain', fallback: 'rain' },              // Rain showers moderate
+      82: { name: 'thunderstorms-rain', fallback: 'thunder' }, // Rain showers violent
+      85: { name: 'snow', fallback: 'snow' },              // Snow showers slight
+      86: { name: 'snow', fallback: 'snow' },              // Snow showers heavy
+      95: { name: 'thunderstorms', fallback: 'thunder' },  // Thunderstorm
+      96: { name: 'thunderstorms', fallback: 'thunder' },  // Thunderstorm with hail
+      99: { name: 'thunderstorms', fallback: 'thunder' },  // Thunderstorm with heavy hail
+    };
+    const DEFAULT_ICON = { name: 'not-available', fallback: 'unknown' };
+
+    const getIconData = (code) => ICON_MAP[code] || DEFAULT_ICON;
     const getIconUrl = (code) => {
-      const iconName = ICON_MAP[code] || 'not-available';
-      return `${METEOCONS_BASE}${iconName}.svg`;
+      const iconData = getIconData(code);
+      return `${METEOCONS_BASE}${iconData.name}.svg`;
+    };
+    const getFallbackSvg = (code, size) => {
+      const iconData = getIconData(code);
+      const svg = SVG_FALLBACKS[iconData.fallback] || SVG_FALLBACKS.unknown;
+      return `<div style="width:${size}px;height:${size}px;color:var(--text-secondary);">${svg}</div>`;
     };
     const getIcon = (code, size = 48) => {
       const url = getIconUrl(code);
-      return `<img src="${url}" alt="weather" width="${size}" height="${size}" style="display:block;" onerror="this.style.display='none'">`;
+      const fallbackHtml = getFallbackSvg(code, size).replace(/"/g, "'").replace(/\n/g, '');
+      return `<img src="${url}" alt="weather" width="${size}" height="${size}" style="display:block;" onerror="this.outerHTML=\`${fallbackHtml}\`">`;
     };
     // Fallback emoji icons for non-weather uses
     const EMOJI_ICONS = {
