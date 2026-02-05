@@ -10,7 +10,7 @@
   <meta name="description" content="Accurate weather forecasts powered by multiple sources">
   <title>MoE Weather</title>
   <link rel="manifest" href="/manifest.json">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌤️</text></svg>">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -846,14 +846,14 @@
     <!-- Header -->
     <header class="header">
       <div class="header-location" id="headerLocation">
-        <span class="header-location-icon">📍</span>
+        <span class="header-location-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></span>
         <span class="header-location-text" id="headerLocationText">Loading...</span>
-        <span class="header-location-arrow">▼</span>
+        <span class="header-location-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       </div>
       <div class="header-actions">
-        <button class="header-btn" id="searchBtn" title="Search Location">🔍</button>
-        <button class="header-btn" id="refreshBtn" title="Refresh">🔄</button>
-        <button class="header-btn" id="themeBtn" title="Theme">🌙</button>
+        <button class="header-btn" id="searchBtn" title="Search Location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg></button>
+        <button class="header-btn" id="refreshBtn" title="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
+        <button class="header-btn" id="themeBtn" title="Theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
       </div>
     </header>
 
@@ -867,7 +867,7 @@
 
       <!-- Error State -->
       <div class="error-state hidden" id="errorState">
-        <div class="error-icon">⚠️</div>
+        <div class="error-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48"><path d="M12 2L2 22h20L12 2z"/><path d="M12 9v4m0 4h.01" stroke-linecap="round"/></svg></div>
         <div class="error-text" id="errorText">Failed to load weather</div>
       </div>
 
@@ -881,7 +881,7 @@
         <!-- Hero Card -->
         <div class="hero">
           <div class="hero-temp-row">
-            <div class="hero-icon" id="heroIcon">🌤️</div>
+            <div class="hero-icon" id="heroIcon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="64" height="64"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></div>
             <div class="hero-temp" id="heroTemp">--°</div>
           </div>
           <div class="hero-condition" id="heroCondition">--</div>
@@ -893,7 +893,7 @@
 
         <!-- Storm Alert (hidden by default) -->
         <div class="storm-alert hidden" id="stormAlert">
-          <div class="storm-alert-icon">⛈️</div>
+          <div class="storm-alert-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/><path d="M13 11l-2 4h3l-2 4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div class="storm-alert-content">
             <div class="storm-alert-title" id="stormAlertTitle">Storm Alert</div>
             <div class="storm-alert-desc" id="stormAlertDesc">Thunderstorm potential detected</div>
@@ -903,19 +903,19 @@
         <!-- Quick Stats -->
         <div class="quick-stats">
           <div class="quick-stat">
-            <div class="quick-stat-icon">💧</div>
+            <div class="quick-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0L12 2.69z"/></svg></div>
             <div class="quick-stat-value" id="statHumidity">--%</div>
             <div class="quick-stat-label">Humidity</div>
             <div class="quick-stat-avg" id="statHumidityAvg"></div>
           </div>
           <div class="quick-stat">
-            <div class="quick-stat-icon">💨</div>
+            <div class="quick-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M9.59 4.59A2 2 0 1111 8H2m10.59 11.41A2 2 0 1014 16H2m2-8a2 2 0 012-2 2 2 0 012 2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
             <div class="quick-stat-value" id="statWind">-- m/s</div>
             <div class="quick-stat-label">Wind</div>
             <div class="quick-stat-avg" id="statWindAvg"></div>
           </div>
           <div class="quick-stat">
-            <div class="quick-stat-icon">🌧️</div>
+            <div class="quick-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/><path d="M12 14v4" stroke-linecap="round"/></svg></div>
             <div class="quick-stat-value" id="statPrecip">--%</div>
             <div class="quick-stat-label">Precip</div>
           </div>
@@ -924,13 +924,13 @@
         <!-- Feature Tabs -->
         <div class="feature-tabs" id="featureTabs">
           <div class="feature-tab active" data-feature="air">
-            <span class="feature-tab-icon">🌬️</span> Air
+            <span class="feature-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9.59 4.59A2 2 0 1111 8H2m10.59 11.41A2 2 0 1014 16H2m2-8a2 2 0 012-2 2 2 0 012 2" stroke-linecap="round"/></svg></span> Air
           </div>
           <div class="feature-tab" data-feature="sun">
-            <span class="feature-tab-icon">☀️</span> Sun/Moon
+            <span class="feature-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span> Sun/Moon
           </div>
           <div class="feature-tab" data-feature="marine">
-            <span class="feature-tab-icon">🌊</span> Marine
+            <span class="feature-tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M2 12c1.5-1.5 3-2 4.5-2s3 .5 4.5 2 3 2 4.5 2 3-.5 4.5-2" stroke-linecap="round"/><path d="M2 17c1.5-1.5 3-2 4.5-2s3 .5 4.5 2 3 2 4.5 2 3-.5 4.5-2" stroke-linecap="round"/></svg></span> Marine
           </div>
         </div>
 
@@ -938,7 +938,7 @@
         <div class="section" id="aqiSection" data-feature-content="air">
           <div class="section-header">
             <div class="section-title">Air Quality</div>
-            <div class="section-toggle">▼</div>
+            <div class="section-toggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           </div>
           <div class="section-content">
             <div class="aqi-card" id="aqiCard">
@@ -951,7 +951,7 @@
         <div class="section hidden" id="astroSection" data-feature-content="sun">
           <div class="section-header">
             <div class="section-title">Sun & Moon</div>
-            <div class="section-toggle">▼</div>
+            <div class="section-toggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           </div>
           <div class="section-content">
             <div class="astro-card" id="astroCard">
@@ -964,7 +964,7 @@
         <div class="section hidden" id="marineSection" data-feature-content="marine">
           <div class="section-header">
             <div class="section-title">Marine Conditions</div>
-            <div class="section-toggle">▼</div>
+            <div class="section-toggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           </div>
           <div class="section-content">
             <div class="marine-card" id="marineCard">
@@ -977,7 +977,7 @@
         <div class="section" id="hourlySection">
           <div class="section-header">
             <div class="section-title">Hourly Forecast</div>
-            <div class="section-toggle">▼</div>
+            <div class="section-toggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           </div>
           <div class="section-content">
             <div class="hourly-scroll" id="hourlyScroll"></div>
@@ -988,7 +988,7 @@
         <div class="section" id="dailySection">
           <div class="section-header">
             <div class="section-title">7-Day Forecast</div>
-            <div class="section-toggle">▼</div>
+            <div class="section-toggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           </div>
           <div class="section-content">
             <div class="daily-list" id="dailyList"></div>
@@ -999,7 +999,7 @@
         <div class="section collapsed" id="detailsSection">
           <div class="section-header">
             <div class="section-title">Details</div>
-            <div class="section-toggle">▼</div>
+            <div class="section-toggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           </div>
           <div class="section-content">
             <div class="details-grid">
@@ -1044,13 +1044,13 @@
   <div class="modal-overlay" id="searchModal">
     <div class="search-modal">
       <div class="search-input-wrap">
-        <span class="search-input-icon">🔍</span>
+        <span class="search-input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg></span>
         <input type="text" class="search-input" id="searchInput" placeholder="Search city..." autocomplete="off">
-        <button class="search-close" id="searchClose">✕</button>
+        <button class="search-close" id="searchClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg></button>
       </div>
       <div class="search-results" id="searchResults"></div>
       <button class="search-geo-btn" id="searchGeoBtn">
-        <span>📍</span> Use Current Location
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg> Use Current Location
       </button>
     </div>
   </div>
@@ -1062,24 +1062,61 @@
       ACTIVE: 'moe_active_location',
       THEME: 'moe_theme'
     };
-    // Weather icon system with inline SVG fallbacks
+    // ==================== SVG ICON LIBRARY ====================
+    // Professional inline SVG icons for the entire app
+    const SVG_ICONS = {
+      // Weather icons
+      sun: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`,
+      cloud: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg>`,
+      partlyCloudy: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="8" r="3"/><path d="M10 2v1m5 1.5l.7.7M18 8h1m-3.5 5l.7.7"/><path d="M17 14h.5a3.5 3.5 0 010 7H7a4.5 4.5 0 01-.4-9"/></svg>`,
+      rain: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/><path d="M8 19v2m4-3v2m4-1v2" stroke-linecap="round"/></svg>`,
+      drizzle: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/><path d="M10 19v1m4-2v1" stroke-linecap="round"/></svg>`,
+      snow: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/><path d="M12 15v6m-2-3h4m-5-1l2 2m2-2l2 2" stroke-linecap="round"/></svg>`,
+      thunder: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/><path d="M13 11l-2 4h3l-2 4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      fog: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h16M4 12h16M4 16h12" stroke-linecap="round"/></svg>`,
+      sleet: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/><circle cx="9" cy="18" r="1" fill="currentColor"/><path d="M14 17v2" stroke-linecap="round"/></svg>`,
+
+      // App UI icons
+      location: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`,
+      search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>`,
+      moon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>`,
+      sunTheme: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`,
+      menu: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18" stroke-linecap="round"/></svg>`,
+      close: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg>`,
+      refresh: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>`,
+      warning: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 22h20L12 2z"/><path d="M12 9v4m0 4h.01" stroke-linecap="round"/></svg>`,
+      check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+
+      // Weather data icons
+      humidity: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0L12 2.69z"/></svg>`,
+      wind: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.59 4.59A2 2 0 1111 8H2m10.59 11.41A2 2 0 1014 16H2m2-8a2 2 0 012-2 2 2 0 012 2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      precip: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/><path d="M12 14v4" stroke-linecap="round"/></svg>`,
+      uv: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`,
+
+      // Astronomy icons
+      sunrise: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 18a5 5 0 00-10 0"/><path d="M12 2v7m0 0l3-3m-3 3L9 6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 18h2m16 0h2M4.93 13.07l1.41 1.41m11.32 0l1.41-1.41" stroke-linecap="round"/></svg>`,
+      sunset: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 18a5 5 0 00-10 0"/><path d="M12 9V2m0 7l3-3m-3 3L9 6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 18h2m16 0h2M4.93 13.07l1.41 1.41m11.32 0l1.41-1.41" stroke-linecap="round"/></svg>`,
+      moonPhase: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>`,
+
+      // Marine icons
+      wave: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12c1.5-1.5 3-2 4.5-2s3 .5 4.5 2 3 2 4.5 2 3-.5 4.5-2" stroke-linecap="round"/><path d="M2 17c1.5-1.5 3-2 4.5-2s3 .5 4.5 2 3 2 4.5 2 3-.5 4.5-2" stroke-linecap="round"/><path d="M2 7c1.5-1.5 3-2 4.5-2s3 .5 4.5 2 3 2 4.5 2 3-.5 4.5-2" stroke-linecap="round"/></svg>`,
+      tide: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M6 18V6m6 12V6m6 12V6" stroke-linecap="round" opacity="0.5"/></svg>`,
+      surf: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12c-1.5 1.5-3 2-4.5 2s-3-.5-4.5-2-3-2-4.5-2-3 .5-4.5 2"/><path d="M12 3v18" stroke-linecap="round"/><ellipse cx="12" cy="12" rx="3" ry="8"/></svg>`,
+
+      // Status icons
+      unknown: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3m.08 4h.01" stroke-linecap="round"/></svg>`
+    };
+
+    // Helper to get SVG icon with size
+    const icon = (name, size = 20) => {
+      const svg = SVG_ICONS[name] || SVG_ICONS.unknown;
+      return `<span class="svg-icon" style="width:${size}px;height:${size}px;display:inline-flex;align-items:center;justify-content:center;">${svg}</span>`;
+    };
+
+    // ==================== WEATHER ICON SYSTEM ====================
     // Primary: basmilius/weather-icons from raw GitHub
     // Fallback: Clean inline SVG icons
     const METEOCONS_BASE = 'https://raw.githubusercontent.com/basmilius/weather-icons/dev/production/fill/svg/';
-
-    // Inline SVG fallback icons (simple, clean designs)
-    const SVG_FALLBACKS = {
-      sun: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`,
-      cloud: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg>`,
-      partlyCloudy: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v2m4.22.78l1.42 1.42M20 12h2M17.64 17.64l1.42 1.42M12 20v2m-5.64-3.64l-1.42 1.42M2 12h2m2.22-6.22L4.8 4.36"/><circle cx="12" cy="10" r="4"/><path d="M16 14h1a4 4 0 010 8H8a5 5 0 01-.5-9.97"/></svg>`,
-      rain: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 13V7a4 4 0 00-8 0v6m-2 0a6 6 0 0012 0"/><path d="M8 19v2m4-3v2m4-1v2" stroke-linecap="round"/></svg>`,
-      drizzle: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/><path d="M8 19v1m4-2v1m4-1v1" stroke-linecap="round"/></svg>`,
-      snow: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/><path d="M12 14v2m0 2v2M9 17h6" stroke-linecap="round"/></svg>`,
-      thunder: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/><path d="M13 11l-2 4h3l-2 4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-      fog: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10h16M4 14h16M4 18h12" stroke-linecap="round"/></svg>`,
-      sleet: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/><circle cx="9" cy="18" r="1"/><path d="M13 17v2" stroke-linecap="round"/><circle cx="17" cy="19" r="1"/></svg>`,
-      unknown: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v.01M12 12a2 2 0 10-2-2" stroke-linecap="round"/></svg>`
-    };
 
     const ICON_MAP = {
       0: { name: 'clear-day', fallback: 'sun' },           // Clear sky
@@ -1120,18 +1157,13 @@
     };
     const getFallbackSvg = (code, size) => {
       const iconData = getIconData(code);
-      const svg = SVG_FALLBACKS[iconData.fallback] || SVG_FALLBACKS.unknown;
+      const svg = SVG_ICONS[iconData.fallback] || SVG_ICONS.unknown;
       return `<div style="width:${size}px;height:${size}px;color:var(--text-secondary);">${svg}</div>`;
     };
     const getIcon = (code, size = 48) => {
       const url = getIconUrl(code);
       const fallbackHtml = getFallbackSvg(code, size).replace(/"/g, "'").replace(/\n/g, '');
       return `<img src="${url}" alt="weather" width="${size}" height="${size}" style="display:block;" onerror="this.outerHTML=\`${fallbackHtml}\`">`;
-    };
-    // Fallback emoji icons for non-weather uses
-    const EMOJI_ICONS = {
-      humidity: '💧', wind: '💨', precip: '🌧️', uv: '☀️',
-      sunrise: '🌅', sunset: '🌇', moon: '🌙', location: '📍'
     };
 
     // ==================== STATE ====================
@@ -1253,7 +1285,10 @@
     function setTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme);
       localStorage.setItem(STORAGE.THEME, theme);
-      els.themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+      // Sun icon for dark mode (to switch to light), Moon icon for light mode (to switch to dark)
+      const sunIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`;
+      const moonIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>`;
+      els.themeBtn.innerHTML = theme === 'dark' ? sunIcon : moonIcon;
     }
 
     function toggleTheme() {
@@ -1327,6 +1362,11 @@
         if (alertEl) alertEl.classList.add('hidden');
       }
 
+      // SVG icons for weather data
+      const windIconSm = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="vertical-align:middle;margin-right:2px;"><path d="M9.59 4.59A2 2 0 1111 8H2m10.59 11.41A2 2 0 1014 16H2" stroke-linecap="round"/></svg>`;
+      const rainIconSm = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="vertical-align:middle;margin-right:2px;"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/><path d="M12 14v3" stroke-linecap="round"/></svg>`;
+      const snowIconSm = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="vertical-align:middle;margin-right:2px;"><path d="M12 2v20m-7-10h14M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>`;
+
       // Hourly (with wind)
       els.hourlyScroll.innerHTML = data.hourly.slice(0, 24).map(h => {
         const time = new Date(h.time);
@@ -1339,7 +1379,7 @@
             <div class="hourly-time">${label}</div>
             <div class="hourly-icon">${getIcon(h.weatherCode, 32)}</div>
             <div class="hourly-temp">${Math.round(h.temperature)}°</div>
-            <div class="hourly-wind">💨${windSpeed}</div>
+            <div class="hourly-wind">${windIconSm}${windSpeed}</div>
             ${precipAmount}
           </div>
         `;
@@ -1353,9 +1393,9 @@
         // Precipitation info
         let precipInfo = '';
         if (d.snowfall && d.snowfall > 0) {
-          precipInfo = `<span class="daily-precip snow">❄️${d.snowfall.toFixed(1)}cm</span>`;
+          precipInfo = `<span class="daily-precip snow">${snowIconSm}${d.snowfall.toFixed(1)}cm</span>`;
         } else if (d.rain && d.rain > 0) {
-          precipInfo = `<span class="daily-precip rain">🌧️${d.rain.toFixed(1)}mm</span>`;
+          precipInfo = `<span class="daily-precip rain">${rainIconSm}${d.rain.toFixed(1)}mm</span>`;
         } else if (d.precipitation > 0) {
           precipInfo = `<span class="daily-precip">${d.precipitation.toFixed(1)}mm</span>`;
         }
@@ -1463,12 +1503,12 @@
       const timeStr = stormTime.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
 
       let severity = 'moderate';
-      let title = '⚡ Thunderstorm Possible';
+      let title = 'Thunderstorm Possible';
       let desc = `Storm energy detected around ${timeStr}`;
 
       if (maxCape > 2500) {
         severity = 'severe';
-        title = '🌪️ Severe Storm Alert';
+        title = 'Severe Storm Alert';
         desc = `High storm energy (CAPE: ${maxCape.toFixed(0)}) - Strong thunderstorms likely around ${timeStr}`;
         alertEl.classList.add('severe');
       } else {
@@ -1497,7 +1537,7 @@
         const chipClass = pollen.level === 'Very High' ? 'very-high' : pollen.level === 'High' ? 'high' : '';
         pollenHtml = `
           <div class="pollen-section">
-            <div class="pollen-title">🌸 Pollen (${pollen.level})</div>
+            <div class="pollen-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4M5.6 5.6l2.8 2.8m7.2 7.2l2.8 2.8M5.6 18.4l2.8-2.8m7.2-7.2l2.8-2.8"/></svg>Pollen (${pollen.level})</div>
             <div class="pollen-chips">
               ${pollen.types.map(t => `<span class="pollen-chip ${chipClass}">${t}</span>`).join('')}
             </div>
@@ -1606,8 +1646,16 @@
       const sunset = data.daily.sunset?.[0] ? new Date(data.daily.sunset[0]) : null;
       const formatTime = (d) => d ? d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '--';
 
-      const moon = data.moon || { phase: 'Unknown', illumination: 0, emoji: '🌙' };
+      const moon = data.moon || { phase: 'Unknown', illumination: 0 };
       const goldenHour = data.golden_hour;
+
+      // SVG icons for astronomy
+      const cameraIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:middle;margin-right:4px;"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
+      const sunriseIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M17 18a5 5 0 00-10 0"/><path d="M12 2v7m0 0l3-3m-3 3L9 6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 18h2m16 0h2M4.93 13.07l1.41 1.41m11.32 0l1.41-1.41" stroke-linecap="round"/></svg>`;
+      const sunsetIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M17 18a5 5 0 00-10 0"/><path d="M12 9V2m0 7l3-3m-3 3L9 6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 18h2m16 0h2M4.93 13.07l1.41 1.41m11.32 0l1.41-1.41" stroke-linecap="round"/></svg>`;
+      const moonIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>`;
+      const starIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+      const sunSmIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2"/></svg>`;
 
       let goldenHtml = '';
       if (goldenHour) {
@@ -1616,11 +1664,11 @@
         goldenHtml = `
           <div class="golden-hour">
             <div class="golden-item">
-              <div class="golden-label">📷 Morning Golden</div>
+              <div class="golden-label">${cameraIcon}Morning Golden</div>
               <div class="golden-time">${formatTime(morningStart)}</div>
             </div>
             <div class="golden-item">
-              <div class="golden-label">📷 Evening Golden</div>
+              <div class="golden-label">${cameraIcon}Evening Golden</div>
               <div class="golden-time">${formatTime(eveningStart)}</div>
             </div>
           </div>
@@ -1628,33 +1676,33 @@
       }
 
       // Zodiac sign
-      const zodiac = moon.zodiac || { sign: 'Unknown', emoji: '✨' };
+      const zodiac = moon.zodiac || { sign: 'Unknown' };
 
       $('astroCard').innerHTML = `
         <div class="astro-row">
           <div class="astro-item">
-            <div class="astro-icon">🌅</div>
+            <div class="astro-icon">${sunriseIcon}</div>
             <div class="astro-time">${formatTime(sunrise)}</div>
             <div class="astro-label">Sunrise</div>
           </div>
           <div class="astro-item">
-            <div class="astro-icon">🌇</div>
+            <div class="astro-icon">${sunsetIcon}</div>
             <div class="astro-time">${formatTime(sunset)}</div>
             <div class="astro-label">Sunset</div>
           </div>
         </div>
         <div class="moon-info">
-          <div class="moon-emoji">${moon.emoji}</div>
+          <div class="moon-emoji">${moonIcon}</div>
           <div class="moon-details">
             <div class="moon-phase">${moon.phase}</div>
             <div class="moon-illum">${moon.illumination}% illuminated</div>
           </div>
         </div>
         <div class="moon-zodiac">
-          <span class="zodiac-emoji">${zodiac.emoji}</span>
+          <span class="zodiac-emoji">${starIcon}</span>
           <span class="zodiac-name">Moon in ${zodiac.sign}</span>
         </div>
-        ${data.daylight_trend ? `<div class="daylight-trend">☀️ ${data.daylight_trend}</div>` : ''}
+        ${data.daylight_trend ? `<div class="daylight-trend">${sunSmIcon}${data.daylight_trend}</div>` : ''}
         ${goldenHtml}
       `;
     }
@@ -1685,11 +1733,23 @@
         return;
       }
 
+      // SVG icons for marine conditions
+      const waveIcons = {
+        flat: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M2 12h20" stroke-linecap="round"/><circle cx="12" cy="16" r="2"/></svg>`,
+        small: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M2 12c2-2 4-2 6 0s4 2 6 0 4-2 6 0" stroke-linecap="round"/><path d="M12 16v4" stroke-linecap="round"/></svg>`,
+        medium: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M2 10c2-3 4-3 6 0s4 3 6 0 4-3 6 0" stroke-linecap="round"/><path d="M2 16c2-2 4-2 6 0s4 2 6 0 4-2 6 0" stroke-linecap="round"/></svg>`,
+        large: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M12 2L2 22h20L12 2z"/><path d="M12 8v6m0 4h.01" stroke-linecap="round"/></svg>`,
+        unknown: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><circle cx="12" cy="12" r="10"/><path d="M18 6L6 18" stroke-linecap="round"/></svg>`
+      };
+      const tideUpIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:middle;margin-right:4px;"><path d="M12 19V5m0 0l-7 7m7-7l7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      const tideDownIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:middle;margin-right:4px;"><path d="M12 5v14m0 0l7-7m-7 7l-7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      const tidesIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:middle;margin-right:4px;"><path d="M2 12c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M2 17c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg>`;
+
       const conditions = data.conditions || { rating: 'Unknown', description: '', suitable_for: [] };
-      const waveEmoji = conditions.rating === 'Flat' ? '🏊' :
-                        conditions.rating === 'Small' ? '🏄' :
-                        conditions.rating === 'Medium' ? '🌊' :
-                        conditions.rating === 'Large' ? '⚠️' : '🚫';
+      const waveIcon = conditions.rating === 'Flat' ? waveIcons.flat :
+                       conditions.rating === 'Small' ? waveIcons.small :
+                       conditions.rating === 'Medium' ? waveIcons.medium :
+                       conditions.rating === 'Large' ? waveIcons.large : waveIcons.unknown;
 
       // Tides section
       const tides = data.tides;
@@ -1697,15 +1757,15 @@
       if (tides) {
         tidesHtml = `
           <div class="marine-tides">
-            <div class="marine-activities-title">🌊 Tides (Estimated)</div>
+            <div class="marine-activities-title">${tidesIcon}Tides (Estimated)</div>
             <div class="tide-times">
               <div class="tide-group">
                 <div class="tide-label">High Tide</div>
-                ${tides.high_tides.map(t => `<div class="tide-time">⬆️ ${t.time}</div>`).join('')}
+                ${tides.high_tides.map(t => `<div class="tide-time">${tideUpIcon}${t.time}</div>`).join('')}
               </div>
               <div class="tide-group">
                 <div class="tide-label">Low Tide</div>
-                ${tides.low_tides.map(t => `<div class="tide-time">⬇️ ${t.time}</div>`).join('')}
+                ${tides.low_tides.map(t => `<div class="tide-time">${tideDownIcon}${t.time}</div>`).join('')}
               </div>
             </div>
             <div class="tide-note">${tides.note}</div>
@@ -1715,7 +1775,7 @@
 
       $('marineCard').innerHTML = `
         <div class="marine-conditions">
-          <div class="marine-rating">${waveEmoji}</div>
+          <div class="marine-rating">${waveIcon}</div>
           <div class="marine-info">
             <div class="marine-status">${conditions.rating}</div>
             <div class="marine-desc">${conditions.description}</div>
@@ -1798,9 +1858,10 @@
           els.searchResults.innerHTML = '<div class="search-result-item"><span>No results found</span></div>';
           return;
         }
+        const locationIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`;
         els.searchResults.innerHTML = results.map((r, i) => `
           <div class="search-result-item" data-index="${i}">
-            <span class="search-result-icon">📍</span>
+            <span class="search-result-icon">${locationIcon}</span>
             <div class="search-result-text">
               <div class="search-result-name">${r.name}</div>
               <div class="search-result-sub">${r.state ? r.state + ', ' : ''}${r.country}</div>
@@ -1852,18 +1913,21 @@
     function openSearch() {
       els.searchModal.classList.add('open');
       els.searchInput.value = '';
+      // SVG icons for search results
+      const checkIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      const pinIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`;
       // Show saved locations initially
       if (state.locations.length > 0) {
         els.searchResults.innerHTML = `
           <div style="padding: 8px 12px; font-size: 12px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Saved Locations</div>
           ${state.locations.map((loc, i) => `
             <div class="search-result-item saved-loc-item" data-saved-index="${i}">
-              <span class="search-result-icon">${i === state.activeIndex ? '✓' : '📍'}</span>
+              <span class="search-result-icon">${i === state.activeIndex ? checkIcon : pinIcon}</span>
               <div class="search-result-text">
                 <div class="search-result-name">${loc.name.split(',')[0]}</div>
                 <div class="search-result-sub">${loc.name.includes(',') ? loc.name.split(',').slice(1).join(',').trim() : ''}</div>
               </div>
-              <button class="delete-loc-btn" data-delete-index="${i}" style="background:none;border:none;font-size:18px;padding:8px;cursor:pointer;color:var(--text-secondary);">×</button>
+              <button class="delete-loc-btn" data-delete-index="${i}" style="background:none;border:none;padding:8px;cursor:pointer;color:var(--text-secondary);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg></button>
             </div>
           `).join('')}
           <div style="padding: 8px 12px; font-size: 12px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; margin-top: 8px;">Search New Location</div>
