@@ -82,9 +82,11 @@
       margin: -8px -12px;
       border-radius: 8px;
       transition: background 0.2s;
+      background: var(--bg);
+      border: 1px solid var(--border);
     }
     .header-location:active {
-      background: var(--bg);
+      background: var(--border);
     }
     .header-location-icon { font-size: 18px; }
     .header-location-text {
@@ -208,6 +210,12 @@
     .add-location-chip {
       color: var(--primary);
       border-style: dashed;
+      border-color: var(--primary);
+      background: transparent;
+    }
+    .add-location-chip:active {
+      background: var(--primary);
+      color: white;
     }
 
     /* Section Cards */
@@ -809,6 +817,7 @@
         <span class="header-location-arrow">▼</span>
       </div>
       <div class="header-actions">
+        <button class="header-btn" id="searchBtn" title="Search Location">🔍</button>
         <button class="header-btn" id="refreshBtn" title="Refresh">🔄</button>
         <button class="header-btn" id="themeBtn" title="Theme">🌙</button>
       </div>
@@ -1043,6 +1052,7 @@
     const els = {
       headerLocation: $('headerLocation'),
       headerLocationText: $('headerLocationText'),
+      searchBtn: $('searchBtn'),
       refreshBtn: $('refreshBtn'),
       themeBtn: $('themeBtn'),
       mainContent: $('mainContent'),
@@ -1694,7 +1704,42 @@
     function openSearch() {
       els.searchModal.classList.add('open');
       els.searchInput.value = '';
-      els.searchResults.innerHTML = '';
+      // Show saved locations initially
+      if (state.locations.length > 0) {
+        els.searchResults.innerHTML = `
+          <div style="padding: 8px 12px; font-size: 12px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Saved Locations</div>
+          ${state.locations.map((loc, i) => `
+            <div class="search-result-item saved-loc-item" data-saved-index="${i}">
+              <span class="search-result-icon">${i === state.activeIndex ? '✓' : '📍'}</span>
+              <div class="search-result-text">
+                <div class="search-result-name">${loc.name.split(',')[0]}</div>
+                <div class="search-result-sub">${loc.name.includes(',') ? loc.name.split(',').slice(1).join(',').trim() : ''}</div>
+              </div>
+              <button class="delete-loc-btn" data-delete-index="${i}" style="background:none;border:none;font-size:18px;padding:8px;cursor:pointer;color:var(--text-secondary);">×</button>
+            </div>
+          `).join('')}
+          <div style="padding: 8px 12px; font-size: 12px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; margin-top: 8px;">Search New Location</div>
+        `;
+        // Attach listeners for saved locations
+        els.searchResults.querySelectorAll('.saved-loc-item').forEach(item => {
+          item.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-loc-btn')) return;
+            const idx = parseInt(item.dataset.savedIndex);
+            setActiveLocation(idx);
+            closeSearch();
+          });
+        });
+        els.searchResults.querySelectorAll('.delete-loc-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.dataset.deleteIndex);
+            removeLocation(idx);
+            openSearch(); // Refresh the modal
+          });
+        });
+      } else {
+        els.searchResults.innerHTML = '';
+      }
       setTimeout(() => els.searchInput.focus(), 100);
     }
 
@@ -1715,37 +1760,60 @@
     // ==================== PULL TO REFRESH ====================
     let pullStartY = 0;
     let isPulling = false;
+    let pullTriggered = false;
+    const PULL_THRESHOLD = 120; // Pixels to pull before triggering refresh
 
     function initPullToRefresh() {
       const main = els.mainContent;
 
       main.addEventListener('touchstart', e => {
-        if (main.scrollTop === 0) {
+        // Only allow pull if we're at the very top (scroll position 0)
+        if (main.scrollTop <= 0) {
           pullStartY = e.touches[0].clientY;
           isPulling = true;
+          pullTriggered = false;
         }
       }, { passive: true });
 
       main.addEventListener('touchmove', e => {
         if (!isPulling) return;
+
+        // Cancel pull if user scrolled down (no longer at top)
+        if (main.scrollTop > 0) {
+          isPulling = false;
+          els.pullIndicator.classList.remove('visible');
+          return;
+        }
+
         const pullDistance = e.touches[0].clientY - pullStartY;
-        if (pullDistance > 60 && main.scrollTop === 0) {
+
+        // Only show indicator if pulling DOWN (positive distance) and past threshold
+        if (pullDistance > PULL_THRESHOLD && main.scrollTop <= 0) {
           els.pullIndicator.classList.add('visible');
+          pullTriggered = true;
+        } else if (pullDistance < PULL_THRESHOLD / 2) {
+          // Remove indicator if pull distance reduced significantly
+          els.pullIndicator.classList.remove('visible');
+          pullTriggered = false;
         }
       }, { passive: true });
 
       main.addEventListener('touchend', () => {
-        if (els.pullIndicator.classList.contains('visible')) {
+        if (pullTriggered && els.pullIndicator.classList.contains('visible')) {
           fetchWeatherForActive();
           setTimeout(() => els.pullIndicator.classList.remove('visible'), 1000);
+        } else {
+          els.pullIndicator.classList.remove('visible');
         }
         isPulling = false;
+        pullTriggered = false;
       });
     }
 
     // ==================== EVENTS ====================
     function initEvents() {
       els.headerLocation.addEventListener('click', openSearch);
+      els.searchBtn.addEventListener('click', openSearch);
       els.refreshBtn.addEventListener('click', fetchWeatherForActive);
       els.themeBtn.addEventListener('click', toggleTheme);
       els.searchClose.addEventListener('click', closeSearch);
