@@ -12,6 +12,10 @@
     { "source": "/api/weather", "destination": "/api/weather" },
     { "source": "/api/geocode", "destination": "/api/geocode" },
     { "source": "/api/health", "destination": "/api/health" },
+    { "source": "/api/air-quality", "destination": "/api/air-quality" },
+    { "source": "/api/historical", "destination": "/api/historical" },
+    { "source": "/api/astronomy", "destination": "/api/astronomy" },
+    { "source": "/api/marine", "destination": "/api/marine" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
