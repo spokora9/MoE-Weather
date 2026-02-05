@@ -35,6 +35,12 @@ const geocodeQuerySchema = z.object({
   q: z.string().min(2).max(100),
 });
 
+const historicalQuerySchema = z.object({
+  lat: z.coerce.number().min(-90).max(90),
+  lon: z.coerce.number().min(-180).max(180),
+  days: z.coerce.number().min(7).max(30).optional().default(10),
+});
+
 // Initialize orchestrator
 const orchestrator = new WeatherOrchestrator({
   apiKeys: {
