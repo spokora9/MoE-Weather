@@ -489,9 +489,13 @@ app.get('/api/marine', async (req: Request, res: Response) => {
       data.current.swell_wave_height as number
     ) : null;
 
+    // Calculate estimated tides based on lunar position
+    const tides = calculateTides(query.lon);
+
     res.json({
       ...data,
       conditions: surfConditions,
+      tides,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -631,6 +635,63 @@ function getSurfConditions(waveHeight: number, wavePeriod: number, swellHeight: 
       suitable_for: ['Expert surfers only', 'Shore watching'],
     };
   }
+}
+
+// Tide estimation based on lunar position
+// Note: This is a simplified estimation. For accurate tides, use local tide station data.
+function calculateTides(longitude: number): {
+  high_tides: { time: string; height: string }[];
+  low_tides: { time: string; height: string }[];
+  note: string;
+} {
+  const now = new Date();
+
+  // Calculate lunar transit time (simplified)
+  // The moon crosses the meridian roughly 50 minutes later each day
+  const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000);
+  const lunarDayOffset = (dayOfYear * 50) % (24 * 60); // minutes
+
+  // Adjust for longitude (4 minutes per degree)
+  const longitudeOffset = longitude * 4;
+
+  // High tide occurs roughly when moon is overhead or opposite
+  // Base time in minutes from midnight UTC
+  const baseHighTide = (lunarDayOffset + longitudeOffset + 720) % (24 * 60);
+
+  // Convert to local time approximation
+  const localOffset = now.getTimezoneOffset();
+
+  // Calculate 4 tides (2 high, 2 low) - roughly 6h 12m apart
+  const tideInterval = 6 * 60 + 12; // 6 hours 12 minutes
+
+  const highTide1 = (baseHighTide - localOffset + 24 * 60) % (24 * 60);
+  const highTide2 = (highTide1 + 2 * tideInterval) % (24 * 60);
+  const lowTide1 = (highTide1 + tideInterval) % (24 * 60);
+  const lowTide2 = (lowTide1 + 2 * tideInterval) % (24 * 60);
+
+  const formatTideTime = (minutes: number) => {
+    const h = Math.floor(minutes / 60);
+    const m = Math.floor(minutes % 60);
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  };
+
+  // Sort and filter to show upcoming tides
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const allHighs = [highTide1, highTide2].sort((a, b) => a - b);
+  const allLows = [lowTide1, lowTide2].sort((a, b) => a - b);
+
+  return {
+    high_tides: allHighs.map(t => ({
+      time: formatTideTime(t),
+      height: 'Est.',
+    })),
+    low_tides: allLows.map(t => ({
+      time: formatTideTime(t),
+      height: 'Est.',
+    })),
+    note: 'Estimated from lunar position. Check local tide tables for accuracy.',
+  };
 }
 
 // Moon phase calculation

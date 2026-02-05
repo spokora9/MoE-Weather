@@ -799,6 +799,40 @@
       background: #166534;
       color: #dcfce7;
     }
+    .marine-tides {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .tide-times {
+      display: flex;
+      gap: 16px;
+      margin: 8px 0;
+    }
+    .tide-group {
+      flex: 1;
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .tide-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .tide-time {
+      font-size: 14px;
+      font-weight: 500;
+      margin: 4px 0;
+    }
+    .tide-note {
+      font-size: 10px;
+      color: var(--text-secondary);
+      font-style: italic;
+      margin-top: 8px;
+    }
 
     /* Utility */
     .hidden { display: none !important; }
@@ -1304,17 +1338,13 @@
         state.weather = data;
         renderWeather(data);
 
-        // Fetch air quality and historical in parallel
+        // Fetch additional data in parallel
         fetchAirQuality(lat, lon);
         fetchHistorical(lat, lon);
-
-        // Load astronomy if sun/moon tab is active
-        const activeTab = document.querySelector('.feature-tab.active');
-        if (activeTab?.dataset.feature === 'sun') {
-          fetchAstronomy(lat, lon);
-        } else if (activeTab?.dataset.feature === 'marine') {
-          fetchMarine(lat, lon);
-        }
+        // Always pre-load astronomy (moon phase, sunrise/sunset commonly wanted)
+        fetchAstronomy(lat, lon);
+        // Pre-load marine data too
+        fetchMarine(lat, lon);
       } catch (e) {
         showError(e.message);
       }
@@ -1568,6 +1598,28 @@
                         conditions.rating === 'Medium' ? '🌊' :
                         conditions.rating === 'Large' ? '⚠️' : '🚫';
 
+      // Tides section
+      const tides = data.tides;
+      let tidesHtml = '';
+      if (tides) {
+        tidesHtml = `
+          <div class="marine-tides">
+            <div class="marine-activities-title">🌊 Tides (Estimated)</div>
+            <div class="tide-times">
+              <div class="tide-group">
+                <div class="tide-label">High Tide</div>
+                ${tides.high_tides.map(t => `<div class="tide-time">⬆️ ${t.time}</div>`).join('')}
+              </div>
+              <div class="tide-group">
+                <div class="tide-label">Low Tide</div>
+                ${tides.low_tides.map(t => `<div class="tide-time">⬇️ ${t.time}</div>`).join('')}
+              </div>
+            </div>
+            <div class="tide-note">${tides.note}</div>
+          </div>
+        `;
+      }
+
       $('marineCard').innerHTML = `
         <div class="marine-conditions">
           <div class="marine-rating">${waveEmoji}</div>
@@ -1590,6 +1642,7 @@
             <div class="marine-stat-label">Swell</div>
           </div>
         </div>
+        ${tidesHtml}
         ${conditions.suitable_for.length > 0 ? `
           <div class="marine-activities">
             <div class="marine-activities-title">Good for</div>
