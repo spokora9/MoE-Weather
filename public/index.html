@@ -852,6 +852,7 @@
       </div>
       <div class="header-actions">
         <button class="header-btn" id="searchBtn" title="Search Location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg></button>
+        <button class="header-btn" id="unitsBtn" title="Toggle Units" style="font-size:14px;font-weight:600;">°C</button>
         <button class="header-btn" id="refreshBtn" title="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
         <button class="header-btn" id="themeBtn" title="Theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
       </div>
@@ -1060,8 +1061,34 @@
     const STORAGE = {
       LOCATIONS: 'moe_locations',
       ACTIVE: 'moe_active_location',
-      THEME: 'moe_theme'
+      THEME: 'moe_theme',
+      UNITS: 'moe_units'
     };
+
+    // Countries that use Fahrenheit (imperial units)
+    const IMPERIAL_COUNTRIES = ['US', 'USA', 'United States', 'LR', 'Liberia', 'MM', 'Myanmar', 'BS', 'Bahamas', 'KY', 'Cayman Islands', 'PW', 'Palau', 'FM', 'Micronesia', 'MH', 'Marshall Islands'];
+
+    // Determine units from country
+    function getUnitsForCountry(country) {
+      if (!country) return 'metric';
+      const upperCountry = country.toUpperCase();
+      return IMPERIAL_COUNTRIES.some(c => c.toUpperCase() === upperCountry) ? 'imperial' : 'metric';
+    }
+
+    // Get temperature unit symbol
+    function getTempSymbol() {
+      return state.units === 'imperial' ? '°F' : '°C';
+    }
+
+    // Get wind speed unit
+    function getWindUnit() {
+      return state.units === 'imperial' ? 'mph' : 'm/s';
+    }
+
+    // Get precipitation unit
+    function getPrecipUnit() {
+      return state.units === 'imperial' ? 'in' : 'mm';
+    }
     // ==================== SVG ICON LIBRARY ====================
     // Professional inline SVG icons for the entire app
     const SVG_ICONS = {
@@ -1175,6 +1202,7 @@
       airQuality: null,
       astronomy: null,
       marine: null,
+      units: localStorage.getItem(STORAGE.UNITS) || 'metric',
       isOnline: navigator.onLine
     };
 
@@ -1185,6 +1213,7 @@
       headerLocationText: $('headerLocationText'),
       searchBtn: $('searchBtn'),
       refreshBtn: $('refreshBtn'),
+      unitsBtn: $('unitsBtn'),
       themeBtn: $('themeBtn'),
       mainContent: $('mainContent'),
       loadingState: $('loadingState'),
@@ -1252,6 +1281,12 @@
         );
         saveLocations();
       }
+      // Auto-set units based on country if not manually set
+      if (loc.country && !localStorage.getItem(STORAGE.UNITS)) {
+        state.units = getUnitsForCountry(loc.country);
+        localStorage.setItem(STORAGE.UNITS, state.units);
+        updateUnitsButton();
+      }
       renderSavedBar();
     }
 
@@ -1294,6 +1329,22 @@
     function toggleTheme() {
       const current = document.documentElement.getAttribute('data-theme');
       setTheme(current === 'dark' ? 'light' : 'dark');
+    }
+
+    // ==================== UNITS ====================
+    function updateUnitsButton() {
+      if (els.unitsBtn) {
+        els.unitsBtn.textContent = state.units === 'imperial' ? '°F' : '°C';
+        els.unitsBtn.title = state.units === 'imperial' ? 'Switch to Celsius' : 'Switch to Fahrenheit';
+      }
+    }
+
+    function toggleUnits() {
+      state.units = state.units === 'imperial' ? 'metric' : 'imperial';
+      localStorage.setItem(STORAGE.UNITS, state.units);
+      updateUnitsButton();
+      // Re-fetch weather with new units
+      fetchWeatherForActive();
     }
 
     // ==================== UI RENDER ====================
@@ -1348,7 +1399,7 @@
 
       // Quick Stats
       els.statHumidity.textContent = data.current.humidity + '%';
-      els.statWind.textContent = data.current.windSpeed.toFixed(1) + ' m/s';
+      els.statWind.textContent = data.current.windSpeed.toFixed(1) + ' ' + getWindUnit();
       // Precipitation chance from hourly
       const precipChance = data.hourly && data.hourly[0] ? (data.hourly[0].precipitationProbability || 0) : 0;
       els.statPrecip.textContent = precipChance + '%';
@@ -1368,12 +1419,13 @@
       const snowIconSm = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="vertical-align:middle;margin-right:2px;"><path d="M12 2v20m-7-10h14M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>`;
 
       // Hourly (with wind)
+      const precipUnit = getPrecipUnit();
       els.hourlyScroll.innerHTML = data.hourly.slice(0, 24).map(h => {
         const time = new Date(h.time);
         const hour = time.getHours();
         const label = hour === 0 ? '12am' : hour === 12 ? '12pm' : hour > 12 ? (hour-12)+'pm' : hour+'am';
         const windSpeed = h.windSpeed ? h.windSpeed.toFixed(0) : '--';
-        const precipAmount = h.precipitation > 0 ? `<div class="hourly-precip">${h.precipitation.toFixed(1)}mm</div>` : '';
+        const precipAmount = h.precipitation > 0 ? `<div class="hourly-precip">${h.precipitation.toFixed(state.units === 'imperial' ? 2 : 1)}${precipUnit}</div>` : '';
         return `
           <div class="hourly-item">
             <div class="hourly-time">${label}</div>
@@ -1387,17 +1439,18 @@
 
       // Daily (with precipitation breakdown)
       const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const snowUnit = state.units === 'imperial' ? 'in' : 'cm';
       els.dailyList.innerHTML = data.daily.map((d, i) => {
         const date = new Date(d.date);
         const dayName = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : days[date.getDay()];
         // Precipitation info
         let precipInfo = '';
         if (d.snowfall && d.snowfall > 0) {
-          precipInfo = `<span class="daily-precip snow">${snowIconSm}${d.snowfall.toFixed(1)}cm</span>`;
+          precipInfo = `<span class="daily-precip snow">${snowIconSm}${d.snowfall.toFixed(1)}${snowUnit}</span>`;
         } else if (d.rain && d.rain > 0) {
-          precipInfo = `<span class="daily-precip rain">${rainIconSm}${d.rain.toFixed(1)}mm</span>`;
+          precipInfo = `<span class="daily-precip rain">${rainIconSm}${d.rain.toFixed(state.units === 'imperial' ? 2 : 1)}${precipUnit}</span>`;
         } else if (d.precipitation > 0) {
-          precipInfo = `<span class="daily-precip">${d.precipitation.toFixed(1)}mm</span>`;
+          precipInfo = `<span class="daily-precip">${d.precipitation.toFixed(state.units === 'imperial' ? 2 : 1)}${precipUnit}</span>`;
         }
         return `
           <div class="daily-item">
@@ -1415,7 +1468,8 @@
       // Details
       els.detailFeels.textContent = Math.round(data.current.feelsLike) + '°';
       els.detailPressure.textContent = data.current.pressure + ' hPa';
-      els.detailVisibility.textContent = (data.current.visibility / 1000).toFixed(0) + ' km';
+      const visibilityUnit = state.units === 'imperial' ? ' mi' : ' km';
+      els.detailVisibility.textContent = (state.units === 'imperial' ? data.current.visibility : data.current.visibility / 1000).toFixed(0) + visibilityUnit;
       els.detailUV.textContent = data.current.uvIndex ?? '--';
 
       // Meta
@@ -1437,7 +1491,7 @@
       state.marine = null;
 
       try {
-        const res = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
+        const res = await fetch(`/api/weather?lat=${lat}&lon=${lon}&units=${state.units}`);
         if (!res.ok) throw new Error('Failed to fetch weather');
         const data = await res.json();
         state.weather = data;
@@ -1783,7 +1837,7 @@
         </div>
         <div class="marine-stats">
           <div class="marine-stat">
-            <div class="marine-stat-value">${(data.current.wave_height || 0).toFixed(1)}m</div>
+            <div class="marine-stat-value">${state.units === 'imperial' ? ((data.current.wave_height || 0) * 3.281).toFixed(1) : (data.current.wave_height || 0).toFixed(1)}${state.units === 'imperial' ? 'ft' : 'm'}</div>
             <div class="marine-stat-label">Wave Height</div>
           </div>
           <div class="marine-stat">
@@ -1791,7 +1845,7 @@
             <div class="marine-stat-label">Wave Period</div>
           </div>
           <div class="marine-stat">
-            <div class="marine-stat-value">${(data.current.swell_wave_height || 0).toFixed(1)}m</div>
+            <div class="marine-stat-value">${state.units === 'imperial' ? ((data.current.swell_wave_height || 0) * 3.281).toFixed(1) : (data.current.swell_wave_height || 0).toFixed(1)}${state.units === 'imperial' ? 'ft' : 'm'}</div>
             <div class="marine-stat-label">Swell</div>
           </div>
         </div>
@@ -1875,7 +1929,8 @@
             addLocation({
               name: `${r.name}, ${r.country}`,
               lat: r.latitude,
-              lon: r.longitude
+              lon: r.longitude,
+              country: r.country
             });
             closeSearch();
             fetchWeatherForActive();
@@ -1981,6 +2036,7 @@
       els.headerLocation.addEventListener('click', openSearch);
       els.searchBtn.addEventListener('click', openSearch);
       els.refreshBtn.addEventListener('click', fetchWeatherForActive);
+      els.unitsBtn.addEventListener('click', toggleUnits);
       els.themeBtn.addEventListener('click', toggleTheme);
       els.searchClose.addEventListener('click', closeSearch);
       els.searchModal.addEventListener('click', e => {
@@ -2014,6 +2070,7 @@
     function init() {
       loadTheme();
       loadLocations();
+      updateUnitsButton();
       renderSavedBar();
       initSections();
       initEvents();
