@@ -2004,45 +2004,94 @@
       }
     }
 
+    // Geocoding cache and abort controller for faster search
+    const geoCache = new Map();
+    let geoAbortController = null;
+
     async function searchCity(query) {
+      // Minimum 2 characters
       if (query.length < 2) {
         els.searchResults.innerHTML = '';
         return;
       }
-      try {
-        const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`);
-        const results = await res.json();
-        if (!results || results.length === 0) {
-          els.searchResults.innerHTML = '<div class="search-result-item"><span>No results found</span></div>';
-          return;
-        }
-        const locationIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`;
-        els.searchResults.innerHTML = results.map((r, i) => `
-          <div class="search-result-item" data-index="${i}">
-            <span class="search-result-icon">${locationIcon}</span>
-            <div class="search-result-text">
-              <div class="search-result-name">${r.name}</div>
-              <div class="search-result-sub">${r.state ? r.state + ', ' : ''}${r.country}</div>
-            </div>
-          </div>
-        `).join('');
 
-        els.searchResults.querySelectorAll('.search-result-item').forEach((item, i) => {
-          item.addEventListener('click', () => {
-            const r = results[i];
-            addLocation({
-              name: `${r.name}, ${r.country}`,
-              lat: r.latitude,
-              lon: r.longitude,
-              country: r.country
-            });
-            closeSearch();
-            fetchWeatherForActive();
-          });
-        });
+      const trimmedQuery = query.trim().toLowerCase();
+
+      // Check cache first (instant results)
+      if (geoCache.has(trimmedQuery)) {
+        renderSearchResults(geoCache.get(trimmedQuery));
+        return;
+      }
+
+      // Show loading indicator
+      els.searchResults.innerHTML = '<div class="search-result-item" style="justify-content:center;opacity:0.6;"><span>Searching...</span></div>';
+
+      // Abort any pending request
+      if (geoAbortController) {
+        geoAbortController.abort();
+      }
+      geoAbortController = new AbortController();
+
+      try {
+        // Use Open-Meteo Geocoding API directly (very fast, no API key needed)
+        const res = await fetch(
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=8&language=en&format=json`,
+          { signal: geoAbortController.signal }
+        );
+        const data = await res.json();
+        const results = (data.results || []).map(r => ({
+          name: r.name,
+          state: r.admin1 || '',
+          country: r.country || '',
+          latitude: r.latitude,
+          longitude: r.longitude,
+          countryCode: r.country_code || ''
+        }));
+
+        // Cache the results
+        geoCache.set(trimmedQuery, results);
+        // Limit cache size
+        if (geoCache.size > 50) {
+          const firstKey = geoCache.keys().next().value;
+          geoCache.delete(firstKey);
+        }
+
+        renderSearchResults(results);
       } catch (e) {
+        if (e.name === 'AbortError') return; // Ignore aborted requests
         els.searchResults.innerHTML = '<div class="search-result-item"><span>Search failed</span></div>';
       }
+    }
+
+    function renderSearchResults(results) {
+      if (!results || results.length === 0) {
+        els.searchResults.innerHTML = '<div class="search-result-item"><span>No results found</span></div>';
+        return;
+      }
+      const locationIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`;
+      els.searchResults.innerHTML = results.map((r, i) => `
+        <div class="search-result-item" data-index="${i}">
+          <span class="search-result-icon">${locationIcon}</span>
+          <div class="search-result-text">
+            <div class="search-result-name">${r.name}</div>
+            <div class="search-result-sub">${r.state ? r.state + ', ' : ''}${r.country}</div>
+          </div>
+        </div>
+      `).join('');
+
+      els.searchResults.querySelectorAll('.search-result-item').forEach((item, i) => {
+        item.addEventListener('click', () => {
+          const r = results[i];
+          addLocation({
+            name: `${r.name}, ${r.country}`,
+            lat: r.latitude,
+            lon: r.longitude,
+            country: r.countryCode || r.country
+          });
+          closeSearch();
+          fetchWeatherForActive();
+        });
+      });
     }
 
     function getCurrentLocation() {
@@ -2152,7 +2201,8 @@
       let searchTimeout;
       els.searchInput.addEventListener('input', e => {
         clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => searchCity(e.target.value), 300);
+        // Fast 150ms debounce - cache makes repeated searches instant
+        searchTimeout = setTimeout(() => searchCity(e.target.value), 150);
       });
 
       window.addEventListener('online', () => {
