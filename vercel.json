@@ -16,6 +16,7 @@
     { "source": "/api/historical", "destination": "/api/historical" },
     { "source": "/api/astronomy", "destination": "/api/astronomy" },
     { "source": "/api/marine", "destination": "/api/marine" },
+    { "source": "/api/nws", "destination": "/api/nws" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

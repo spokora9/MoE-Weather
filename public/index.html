@@ -1484,6 +1484,11 @@
     }
 
     // ==================== API ====================
+    // Check if coordinates are within continental US
+    function isUSLocation(lat, lon) {
+      return lat >= 24 && lat <= 50 && lon >= -125 && lon <= -66;
+    }
+
     async function fetchWeather(lat, lon) {
       showLoading();
       // Clear cached data for optional features when location changes
@@ -1504,9 +1509,63 @@
         fetchAstronomy(lat, lon);
         // Pre-load marine data too
         fetchMarine(lat, lon);
+        // Fetch NWS alerts for US locations (official government alerts)
+        if (isUSLocation(lat, lon)) {
+          fetchNWSAlerts(lat, lon);
+        }
       } catch (e) {
         showError(e.message);
       }
+    }
+
+    // Fetch NWS (National Weather Service) alerts for US locations
+    async function fetchNWSAlerts(lat, lon) {
+      try {
+        const res = await fetch(`/api/nws?lat=${lat}&lon=${lon}`);
+        if (!res.ok) return; // Silently fail for non-US or API errors
+        const data = await res.json();
+        if (data.alerts && data.alerts.length > 0) {
+          renderNWSAlerts(data.alerts);
+        }
+        // Add NWS as a source
+        if (data.source) {
+          const sourcesList = $('sourcesList');
+          if (sourcesList && !sourcesList.innerHTML.includes('NWS')) {
+            sourcesList.innerHTML += `<span class="source-badge" style="background:#1a4480;color:white;">NWS</span>`;
+          }
+        }
+      } catch (e) {
+        console.log('NWS alerts not available:', e.message);
+      }
+    }
+
+    function renderNWSAlerts(alerts) {
+      // Filter for significant alerts
+      const significantAlerts = alerts.filter(a =>
+        ['Extreme', 'Severe', 'Moderate'].includes(a.severity)
+      );
+      if (significantAlerts.length === 0) return;
+
+      const alertEl = $('stormAlert');
+      if (!alertEl) return;
+
+      const mostSevere = significantAlerts[0];
+      const alertIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M12 2L2 22h20L12 2z"/><path d="M12 9v4m0 4h.01" stroke-linecap="round"/></svg>`;
+
+      alertEl.innerHTML = `
+        <div class="storm-alert-icon">${alertIcon}</div>
+        <div class="storm-alert-content">
+          <div class="storm-alert-title">${mostSevere.event}</div>
+          <div class="storm-alert-desc">${mostSevere.headline}</div>
+        </div>
+      `;
+
+      if (mostSevere.severity === 'Extreme' || mostSevere.severity === 'Severe') {
+        alertEl.classList.add('severe');
+      } else {
+        alertEl.classList.remove('severe');
+      }
+      alertEl.classList.remove('hidden');
     }
 
     async function fetchAirQuality(lat, lon) {
