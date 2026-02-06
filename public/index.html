@@ -145,7 +145,26 @@
       margin-bottom: 8px;
     }
     .hero-icon { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; }
+    .hero-temp-wrap { display: flex; align-items: flex-start; gap: 4px; }
     .hero-temp { font-size: 64px; font-weight: 700; line-height: 1; }
+    .unit-toggle {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+    .unit-toggle:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    .unit-toggle:active { transform: scale(0.95); }
     .hero-condition {
       font-size: 18px;
       color: var(--text-secondary);
@@ -883,7 +902,10 @@
         <div class="hero">
           <div class="hero-temp-row">
             <div class="hero-icon" id="heroIcon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="64" height="64"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></div>
-            <div class="hero-temp" id="heroTemp">--°</div>
+            <div class="hero-temp-wrap">
+              <div class="hero-temp" id="heroTemp">--°</div>
+              <button class="unit-toggle" id="unitToggle" title="Toggle temperature unit">°C</button>
+            </div>
           </div>
           <div class="hero-condition" id="heroCondition">--</div>
           <div class="hero-highlow">
@@ -1224,6 +1246,7 @@
       addLocationBtn: $('addLocationBtn'),
       heroIcon: $('heroIcon'),
       heroTemp: $('heroTemp'),
+      unitToggle: $('unitToggle'),
       heroCondition: $('heroCondition'),
       heroHigh: $('heroHigh'),
       heroLow: $('heroLow'),
@@ -1281,11 +1304,9 @@
         );
         saveLocations();
       }
-      // Auto-set units based on country if not manually set
-      if (loc.country && !localStorage.getItem(STORAGE.UNITS)) {
-        state.units = getUnitsForCountry(loc.country);
-        localStorage.setItem(STORAGE.UNITS, state.units);
-        updateUnitsButton();
+      // Auto-detect units based on country (US = Fahrenheit, others = Celsius)
+      if (loc.country) {
+        autoDetectUnits(loc.country);
       }
       renderSavedBar();
     }
@@ -1306,6 +1327,11 @@
       state.activeIndex = index;
       saveLocations();
       renderSavedBar();
+      // Auto-detect units based on location's country
+      const loc = state.locations[index];
+      if (loc && loc.country) {
+        autoDetectUnits(loc.country);
+      }
       fetchWeatherForActive();
     }
 
@@ -1333,9 +1359,17 @@
 
     // ==================== UNITS ====================
     function updateUnitsButton() {
+      const label = state.units === 'imperial' ? '°F' : '°C';
+      const title = state.units === 'imperial' ? 'Switch to Celsius' : 'Switch to Fahrenheit';
+      // Update header button
       if (els.unitsBtn) {
-        els.unitsBtn.textContent = state.units === 'imperial' ? '°F' : '°C';
-        els.unitsBtn.title = state.units === 'imperial' ? 'Switch to Celsius' : 'Switch to Fahrenheit';
+        els.unitsBtn.textContent = label;
+        els.unitsBtn.title = title;
+      }
+      // Update hero toggle button
+      if (els.unitToggle) {
+        els.unitToggle.textContent = label;
+        els.unitToggle.title = title;
       }
     }
 
@@ -1345,6 +1379,17 @@
       updateUnitsButton();
       // Re-fetch weather with new units
       fetchWeatherForActive();
+    }
+
+    // Auto-detect units based on location country
+    function autoDetectUnits(country) {
+      if (!country) return;
+      const detectedUnits = getUnitsForCountry(country);
+      if (detectedUnits !== state.units) {
+        state.units = detectedUnits;
+        localStorage.setItem(STORAGE.UNITS, state.units);
+        updateUnitsButton();
+      }
     }
 
     // ==================== UI RENDER ====================
@@ -2096,6 +2141,7 @@
       els.searchBtn.addEventListener('click', openSearch);
       els.refreshBtn.addEventListener('click', fetchWeatherForActive);
       els.unitsBtn.addEventListener('click', toggleUnits);
+      els.unitToggle.addEventListener('click', toggleUnits);
       els.themeBtn.addEventListener('click', toggleTheme);
       els.searchClose.addEventListener('click', closeSearch);
       els.searchModal.addEventListener('click', e => {
