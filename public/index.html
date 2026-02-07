@@ -2101,19 +2101,67 @@
       }
       showLoading();
       navigator.geolocation.getCurrentPosition(
-        pos => {
-          addLocation({
-            name: 'Current Location',
-            lat: pos.coords.latitude,
-            lon: pos.coords.longitude
-          });
+        async pos => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+
+          // Reverse geocode to get city name and country
+          try {
+            const res = await fetch(
+              `https://geocoding-api.open-meteo.com/v1/search?name=${lat.toFixed(2)},${lon.toFixed(2)}&count=1&language=en&format=json`
+            );
+
+            // Try reverse geocoding via a different approach - use nominatim
+            const reverseRes = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
+              { headers: { 'User-Agent': 'MoE-Weather-App' } }
+            );
+
+            if (reverseRes.ok) {
+              const data = await reverseRes.json();
+              const city = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || 'Current Location';
+              const country = data.address?.country || '';
+              const countryCode = data.address?.country_code?.toUpperCase() || '';
+
+              addLocation({
+                name: country ? `${city}, ${country}` : city,
+                lat: lat,
+                lon: lon,
+                country: countryCode || country
+              });
+            } else {
+              // Fallback if reverse geocoding fails
+              addLocation({
+                name: 'Current Location',
+                lat: lat,
+                lon: lon
+              });
+            }
+          } catch (e) {
+            // Fallback if reverse geocoding fails
+            addLocation({
+              name: 'Current Location',
+              lat: lat,
+              lon: lon
+            });
+          }
+
           closeSearch();
           fetchWeatherForActive();
         },
         err => {
-          showError('Could not get location');
+          console.error('Geolocation error:', err);
+          let errorMsg = 'Could not get location';
+          if (err.code === 1) errorMsg = 'Location permission denied';
+          else if (err.code === 2) errorMsg = 'Location unavailable';
+          else if (err.code === 3) errorMsg = 'Location request timed out';
+          showError(errorMsg);
         },
-        { timeout: 10000 }
+        {
+          timeout: 15000,
+          maximumAge: 0,  // Don't use cached position
+          enableHighAccuracy: true
+        }
       );
     }
 
