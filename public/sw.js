@@ -8,6 +8,7 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/icons/icon.svg',
 ];
 
 // API cache with shorter TTL
