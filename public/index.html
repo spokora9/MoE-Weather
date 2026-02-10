@@ -76,47 +76,54 @@
     .header-location {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       cursor: pointer;
-      padding: 8px 12px;
-      margin: -8px -12px;
+      padding: 8px 10px;
+      margin: -8px 0;
       border-radius: 8px;
       transition: background 0.2s;
       background: var(--bg);
       border: 1px solid var(--border);
+      flex: 1;
+      min-width: 0;
+      max-width: 55%;
     }
     .header-location:active {
       background: var(--border);
     }
-    .header-location-icon { font-size: 18px; }
+    .header-location-icon { font-size: 16px; flex-shrink: 0; }
     .header-location-text {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
-      max-width: 200px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0;
     }
     .header-location-arrow {
       font-size: 12px;
       color: var(--text-secondary);
+      flex-shrink: 0;
     }
     .header-actions {
       display: flex;
-      gap: 4px;
+      gap: 2px;
+      flex-shrink: 0;
     }
     .header-btn {
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
       background: none;
       border: none;
       border-radius: 8px;
-      font-size: 20px;
+      font-size: 18px;
       cursor: pointer;
       transition: background 0.2s;
+      flex-shrink: 0;
     }
     .header-btn:active {
       background: var(--bg);
@@ -238,6 +245,30 @@
     .saved-chip.active .chip-unit {
       background: rgba(255,255,255,0.25);
       color: white;
+    }
+    .chip-delete {
+      display: none;
+      width: 18px;
+      height: 18px;
+      align-items: center;
+      justify-content: center;
+      background: var(--error);
+      color: white;
+      border-radius: 50%;
+      margin-left: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .saved-chip:hover .chip-delete,
+    .saved-chip:active .chip-delete {
+      display: flex;
+    }
+    .saved-chip.active .chip-delete {
+      background: rgba(255,255,255,0.3);
+    }
+    @media (hover: none) {
+      .chip-delete { display: flex; opacity: 0.6; }
     }
     .add-location-chip {
       color: var(--primary);
@@ -883,10 +914,10 @@
         <span class="header-location-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
       </div>
       <div class="header-actions">
-        <button class="header-btn" id="searchBtn" title="Search Location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg></button>
-        <button class="header-btn" id="unitsBtn" title="Toggle Units" style="font-size:14px;font-weight:600;">°C</button>
-        <button class="header-btn" id="refreshBtn" title="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
-        <button class="header-btn" id="themeBtn" title="Theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
+        <button class="header-btn" id="searchBtn" title="Search Location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg></button>
+        <button class="header-btn" id="unitsBtn" title="Toggle Units" style="font-size:13px;font-weight:600;">°C</button>
+        <button class="header-btn" id="refreshBtn" title="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
+        <button class="header-btn" id="themeBtn" title="Theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
       </div>
     </header>
 
@@ -1108,6 +1139,17 @@
       if (!country) return 'metric';
       const upperCountry = country.toUpperCase();
       return IMPERIAL_COUNTRIES.some(c => c.toUpperCase() === upperCountry) ? 'imperial' : 'metric';
+    }
+
+    // Check if coordinates are in the US (fallback for missing country)
+    function isUSCoordinates(lat, lon) {
+      // Continental US
+      const isContiguous = lat >= 24 && lat <= 49 && lon >= -125 && lon <= -66;
+      // Alaska
+      const isAlaska = lat >= 51 && lat <= 72 && lon >= -180 && lon <= -130;
+      // Hawaii
+      const isHawaii = lat >= 18 && lat <= 29 && lon >= -161 && lon <= -154;
+      return isContiguous || isAlaska || isHawaii;
     }
 
     // Get temperature unit symbol
@@ -1340,10 +1382,21 @@
       state.activeIndex = index;
       saveLocations();
       renderSavedBar();
-      // Auto-detect units based on location's country
+      // Auto-detect units based on location's country or coordinates
       const loc = state.locations[index];
-      if (loc && loc.country) {
-        autoDetectUnits(loc.country);
+      if (loc) {
+        if (loc.country) {
+          autoDetectUnits(loc.country);
+        } else {
+          // Fallback: detect from coordinates
+          const detectedUnits = isUSCoordinates(loc.lat, loc.lon) ? 'imperial' : 'metric';
+          if (detectedUnits !== state.units) {
+            state.units = detectedUnits;
+            localStorage.setItem(STORAGE.UNITS, state.units);
+            updateUnitsButton();
+            showUnitChangeNotification(state.units === 'imperial' ? 'metric' : 'imperial', detectedUnits);
+          }
+        }
       }
       fetchWeatherForActive();
     }
@@ -1440,15 +1493,24 @@
     }
 
     function renderSavedBar() {
+      const deleteIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg>`;
       const chips = state.locations.map((loc, i) => {
         // Get the unit preference for this specific location
-        const locUnits = getUnitsForCountry(loc.country);
+        // Try country code first, then detect from coordinates if missing
+        let locUnits = 'metric';
+        if (loc.country) {
+          locUnits = getUnitsForCountry(loc.country);
+        } else {
+          // Fallback: detect from coordinates (rough US detection)
+          locUnits = isUSCoordinates(loc.lat, loc.lon) ? 'imperial' : 'metric';
+        }
         const unitLabel = locUnits === 'imperial' ? '°F' : '°C';
         const isActive = i === state.activeIndex;
         return `
           <div class="saved-chip ${isActive ? 'active' : ''}" data-index="${i}">
             ${loc.name.split(',')[0]}
             <span class="chip-unit" title="${locUnits === 'imperial' ? 'Fahrenheit' : 'Celsius'}">${unitLabel}</span>
+            <span class="chip-delete" data-delete="${i}" title="Remove location">${deleteIcon}</span>
           </div>
         `;
       }).join('');
@@ -1456,7 +1518,21 @@
 
       // Re-attach event listeners
       els.savedBar.querySelectorAll('.saved-chip[data-index]').forEach(chip => {
-        chip.addEventListener('click', () => setActiveLocation(parseInt(chip.dataset.index)));
+        chip.addEventListener('click', (e) => {
+          // Don't switch location if clicking delete button
+          if (e.target.closest('.chip-delete')) return;
+          setActiveLocation(parseInt(chip.dataset.index));
+        });
+      });
+      // Delete button listeners
+      els.savedBar.querySelectorAll('.chip-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idx = parseInt(btn.dataset.delete);
+          if (confirm(`Remove ${state.locations[idx].name.split(',')[0]}?`)) {
+            removeLocation(idx);
+          }
+        });
       });
       $('addLocationBtn').addEventListener('click', openSearch);
     }
