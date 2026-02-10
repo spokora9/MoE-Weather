@@ -226,6 +226,19 @@
     .saved-chip:not(.active):active {
       background: var(--bg);
     }
+    .chip-unit {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 5px;
+      background: var(--bg);
+      border-radius: 6px;
+      margin-left: 4px;
+      opacity: 0.8;
+    }
+    .saved-chip.active .chip-unit {
+      background: rgba(255,255,255,0.25);
+      color: white;
+    }
     .add-location-chip {
       color: var(--primary);
       border-style: dashed;
@@ -1386,9 +1399,23 @@
       if (!country) return;
       const detectedUnits = getUnitsForCountry(country);
       if (detectedUnits !== state.units) {
+        const oldUnits = state.units;
         state.units = detectedUnits;
         localStorage.setItem(STORAGE.UNITS, state.units);
         updateUnitsButton();
+        // Show a brief notification about the unit change
+        showUnitChangeNotification(oldUnits, detectedUnits);
+      }
+    }
+
+    // Show a subtle notification when units change
+    function showUnitChangeNotification(from, to) {
+      const label = to === 'imperial' ? 'Fahrenheit (°F)' : 'Celsius (°C)';
+      const indicator = els.pullIndicator;
+      if (indicator) {
+        indicator.textContent = `Switched to ${label}`;
+        indicator.classList.add('visible');
+        setTimeout(() => indicator.classList.remove('visible'), 1500);
       }
     }
 
@@ -1413,11 +1440,18 @@
     }
 
     function renderSavedBar() {
-      const chips = state.locations.map((loc, i) => `
-        <div class="saved-chip ${i === state.activeIndex ? 'active' : ''}" data-index="${i}">
-          ${loc.name.split(',')[0]}
-        </div>
-      `).join('');
+      const chips = state.locations.map((loc, i) => {
+        // Get the unit preference for this specific location
+        const locUnits = getUnitsForCountry(loc.country);
+        const unitLabel = locUnits === 'imperial' ? '°F' : '°C';
+        const isActive = i === state.activeIndex;
+        return `
+          <div class="saved-chip ${isActive ? 'active' : ''}" data-index="${i}">
+            ${loc.name.split(',')[0]}
+            <span class="chip-unit" title="${locUnits === 'imperial' ? 'Fahrenheit' : 'Celsius'}">${unitLabel}</span>
+          </div>
+        `;
+      }).join('');
       els.savedBar.innerHTML = chips + `<div class="saved-chip add-location-chip" id="addLocationBtn">+ Add</div>`;
 
       // Re-attach event listeners
