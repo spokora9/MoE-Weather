@@ -9,7 +9,13 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "vitest",
-    "lint": "eslint src --ext .ts,.tsx"
+    "lint": "eslint src --ext .ts,.tsx",
+    "cap:sync": "npx cap sync",
+    "cap:android": "npx cap open android",
+    "cap:ios": "npx cap open ios",
+    "cap:build": "npm run build && npx cap sync",
+    "android:build": "npm run cap:sync && cd android && ./gradlew assembleDebug",
+    "android:release": "npm run cap:sync && cd android && ./gradlew assembleRelease"
   },
   "keywords": [
     "weather",
@@ -21,6 +27,16 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@capacitor/android": "^8.0.2",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/cli": "^8.0.2",
+    "@capacitor/core": "^8.0.2",
+    "@capacitor/geolocation": "^8.0.0",
+    "@capacitor/ios": "^8.0.2",
+    "@capacitor/keyboard": "^8.0.0",
+    "@capacitor/network": "^8.0.0",
+    "@capacitor/splash-screen": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0",
     "axios": "^1.6.2",
     "compression": "^1.7.4",
     "cors": "^2.8.5",

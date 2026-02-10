@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MoE Weather</string>
+    <string name="title_activity_main">MoE Weather</string>
+    <string name="package_name">com.moeweather.app</string>
+    <string name="custom_url_scheme">com.moeweather.app</string>
+    <string name="widget_description">Shows current weather for your location</string>
+    <string name="widget_name">MoE Weather</string>
+</resources>
