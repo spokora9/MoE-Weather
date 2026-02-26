@@ -573,7 +573,146 @@
       color: var(--error);
     }
     .error-icon { font-size: 48px; margin-bottom: 12px; }
-    .error-text { font-size: 14px; }
+    .error-text { font-size: 14px; margin-bottom: 20px; }
+    .error-retry-btn {
+      padding: 12px 24px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    /* Welcome / Setup Screen */
+    .welcome-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      text-align: center;
+      min-height: 70vh;
+      gap: 0;
+    }
+    .welcome-icon {
+      width: 96px;
+      height: 96px;
+      background: linear-gradient(135deg, #60a5fa, #3b82f6);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      color: white;
+    }
+    .welcome-title {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .welcome-subtitle {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 36px;
+      line-height: 1.5;
+      max-width: 280px;
+    }
+    .welcome-error {
+      background: #fee2e2;
+      color: #b91c1c;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      max-width: 320px;
+      text-align: center;
+    }
+    [data-theme="dark"] .welcome-error {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+    }
+    .welcome-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 320px;
+      padding: 16px;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      margin-bottom: 12px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .welcome-btn:active { transform: scale(0.98); opacity: 0.9; }
+    .welcome-btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .welcome-btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+    .welcome-divider {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin: 4px 0 12px;
+    }
+    .welcome-search-wrap {
+      width: 100%;
+      max-width: 320px;
+      position: relative;
+    }
+    .welcome-search-input {
+      width: 100%;
+      padding: 14px 16px 14px 44px;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      font-size: 16px;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+    }
+    .welcome-search-input:focus {
+      border-color: var(--primary);
+    }
+    .welcome-search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+    }
+    .welcome-results {
+      width: 100%;
+      max-width: 320px;
+      background: var(--surface);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      margin-top: 8px;
+      overflow: hidden;
+      display: none;
+    }
+    .welcome-results.visible { display: block; }
+    .welcome-result-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+    .welcome-result-item:last-child { border-bottom: none; }
+    .welcome-result-item:active { background: var(--bg); }
+    .welcome-result-name { font-size: 14px; font-weight: 500; }
+    .welcome-result-sub { font-size: 12px; color: var(--text-secondary); }
 
     /* Pull to Refresh */
     .pull-indicator {
@@ -910,8 +1049,33 @@
 
     <!-- Main Content -->
     <main class="main" id="mainContent">
+      <!-- Welcome / Setup Screen (shown when no locations saved) -->
+      <div class="welcome-state hidden" id="welcomeState">
+        <div class="welcome-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="52" height="52"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        </div>
+        <div class="welcome-title">MoE Weather</div>
+        <div class="welcome-subtitle">Accurate forecasts from multiple sources. Add a location to get started.</div>
+        <div class="welcome-error hidden" id="welcomeError"></div>
+
+        <button class="welcome-btn welcome-btn-primary" id="welcomeGeoBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          Use My Location
+        </button>
+
+        <div class="welcome-divider">or search for a city</div>
+
+        <div class="welcome-search-wrap">
+          <span class="welcome-search-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
+          </span>
+          <input type="text" class="welcome-search-input" id="welcomeSearchInput" placeholder="e.g. London, New York..." autocomplete="off">
+        </div>
+        <div class="welcome-results" id="welcomeResults"></div>
+      </div>
+
       <!-- Loading State -->
-      <div class="loading-state" id="loadingState">
+      <div class="loading-state hidden" id="loadingState">
         <div class="spinner"></div>
         <div>Loading weather...</div>
       </div>
@@ -920,6 +1084,7 @@
       <div class="error-state hidden" id="errorState">
         <div class="error-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48"><path d="M12 2L2 22h20L12 2z"/><path d="M12 9v4m0 4h.01" stroke-linecap="round"/></svg></div>
         <div class="error-text" id="errorText">Failed to load weather</div>
+        <button class="error-retry-btn" id="errorRetryBtn">Try Again</button>
       </div>
 
       <!-- Weather Content -->
@@ -1310,7 +1475,13 @@
       searchResults: $('searchResults'),
       searchGeoBtn: $('searchGeoBtn'),
       pullIndicator: $('pullIndicator'),
-      offlineBanner: $('offlineBanner')
+      offlineBanner: $('offlineBanner'),
+      welcomeState: $('welcomeState'),
+      welcomeGeoBtn: $('welcomeGeoBtn'),
+      welcomeSearchInput: $('welcomeSearchInput'),
+      welcomeResults: $('welcomeResults'),
+      welcomeError: $('welcomeError'),
+      errorRetryBtn: $('errorRetryBtn')
     };
 
     // ==================== STORAGE ====================
@@ -1460,13 +1631,35 @@
     }
 
     // ==================== UI RENDER ====================
+    function showWelcome() {
+      els.welcomeState.classList.remove('hidden');
+      els.loadingState.classList.add('hidden');
+      els.errorState.classList.add('hidden');
+      els.weatherContent.classList.add('hidden');
+      // Clear any previous error
+      if (els.welcomeError) {
+        els.welcomeError.classList.add('hidden');
+        els.welcomeError.textContent = '';
+      }
+    }
+
+    function showWelcomeWithError(msg) {
+      showWelcome();
+      if (els.welcomeError) {
+        els.welcomeError.textContent = msg;
+        els.welcomeError.classList.remove('hidden');
+      }
+    }
+
     function showLoading() {
+      els.welcomeState.classList.add('hidden');
       els.loadingState.classList.remove('hidden');
       els.errorState.classList.add('hidden');
       els.weatherContent.classList.add('hidden');
     }
 
     function showError(msg) {
+      els.welcomeState.classList.add('hidden');
       els.loadingState.classList.add('hidden');
       els.errorState.classList.remove('hidden');
       els.weatherContent.classList.add('hidden');
@@ -1474,6 +1667,7 @@
     }
 
     function showWeather() {
+      els.welcomeState.classList.add('hidden');
       els.loadingState.classList.add('hidden');
       els.errorState.classList.add('hidden');
       els.weatherContent.classList.remove('hidden');
@@ -2176,9 +2370,13 @@
       });
     }
 
-    function getCurrentLocation() {
+    function getCurrentLocation(fromWelcome = false) {
       if (!navigator.geolocation) {
-        showError('Geolocation not supported');
+        if (fromWelcome) {
+          showWelcomeWithError('Geolocation is not supported by your browser. Please search for a city.');
+        } else {
+          showError('Geolocation not supported');
+        }
         return;
       }
       showLoading();
@@ -2234,10 +2432,22 @@
         err => {
           console.error('Geolocation error:', err);
           let errorMsg = 'Could not get location';
-          if (err.code === 1) errorMsg = 'Location permission denied';
-          else if (err.code === 2) errorMsg = 'Location unavailable';
-          else if (err.code === 3) errorMsg = 'Location request timed out';
-          showError(errorMsg);
+          let welcomeMsg = 'Could not get your location. Please search for a city below.';
+          if (err.code === 1) {
+            errorMsg = 'Location permission denied';
+            welcomeMsg = 'Location access denied. Please search for a city below.';
+          } else if (err.code === 2) {
+            errorMsg = 'Location unavailable';
+            welcomeMsg = 'Location unavailable. Please search for a city below.';
+          } else if (err.code === 3) {
+            errorMsg = 'Location request timed out';
+            welcomeMsg = 'Location request timed out. Please search for a city below.';
+          }
+          if (fromWelcome) {
+            showWelcomeWithError(welcomeMsg);
+          } else {
+            showError(errorMsg);
+          }
         },
         {
           timeout: 15000,
@@ -2362,6 +2572,88 @@
       navigator.serviceWorker.register('/sw.js').catch(() => {});
     }
 
+    // ==================== WELCOME SCREEN SEARCH ====================
+    const welcomeCache = new Map();
+    let welcomeAbort = null;
+
+    async function welcomeSearch(query) {
+      if (query.length < 2) {
+        els.welcomeResults.classList.remove('visible');
+        return;
+      }
+      const key = query.trim().toLowerCase();
+      if (welcomeCache.has(key)) {
+        renderWelcomeResults(welcomeCache.get(key));
+        return;
+      }
+      if (welcomeAbort) welcomeAbort.abort();
+      welcomeAbort = new AbortController();
+      try {
+        const res = await fetch(
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=6&language=en&format=json`,
+          { signal: welcomeAbort.signal }
+        );
+        const data = await res.json();
+        const results = (data.results || []).map(r => ({
+          name: r.name,
+          state: r.admin1 || '',
+          country: r.country || '',
+          latitude: r.latitude,
+          longitude: r.longitude,
+          countryCode: r.country_code || ''
+        }));
+        welcomeCache.set(key, results);
+        renderWelcomeResults(results);
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+      }
+    }
+
+    function renderWelcomeResults(results) {
+      if (!results.length) {
+        els.welcomeResults.classList.remove('visible');
+        return;
+      }
+      const pinIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`;
+      els.welcomeResults.innerHTML = results.map((r, i) => `
+        <div class="welcome-result-item" data-index="${i}">
+          <span style="color:var(--text-secondary)">${pinIcon}</span>
+          <div>
+            <div class="welcome-result-name">${r.name}</div>
+            <div class="welcome-result-sub">${r.state ? r.state + ', ' : ''}${r.country}</div>
+          </div>
+        </div>
+      `).join('');
+      els.welcomeResults.classList.add('visible');
+      els.welcomeResults.querySelectorAll('.welcome-result-item').forEach((item, i) => {
+        item.addEventListener('click', () => {
+          const r = results[i];
+          addLocation({
+            name: `${r.name}, ${r.country}`,
+            lat: r.latitude,
+            lon: r.longitude,
+            country: r.countryCode || r.country
+          });
+          els.welcomeResults.classList.remove('visible');
+          fetchWeatherForActive();
+        });
+      });
+    }
+
+    function initWelcomeScreen() {
+      // "Use My Location" button
+      els.welcomeGeoBtn.addEventListener('click', () => {
+        getCurrentLocation(true); // fromWelcome=true
+      });
+
+      // Inline search
+      let welcomeTimeout;
+      els.welcomeSearchInput.addEventListener('input', e => {
+        clearTimeout(welcomeTimeout);
+        welcomeTimeout = setTimeout(() => welcomeSearch(e.target.value), 150);
+      });
+    }
+
     // ==================== INIT ====================
     function init() {
       loadTheme();
@@ -2372,6 +2664,18 @@
       initEvents();
       initPullToRefresh();
       initFeatureTabs();
+      initWelcomeScreen();
+
+      // Error retry button
+      if (els.errorRetryBtn) {
+        els.errorRetryBtn.addEventListener('click', () => {
+          if (state.locations.length > 0) {
+            fetchWeatherForActive();
+          } else {
+            showWelcome();
+          }
+        });
+      }
 
       if (!navigator.onLine) {
         els.offlineBanner.classList.add('visible');
@@ -2380,7 +2684,8 @@
       if (state.locations.length > 0) {
         fetchWeatherForActive();
       } else {
-        getCurrentLocation();
+        // Show welcome screen instead of auto-triggering geolocation
+        showWelcome();
       }
     }
 
