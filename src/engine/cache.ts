@@ -5,6 +5,9 @@
  */
 
 import NodeCache from 'node-cache';
+import { createLogger } from '../lib/logger.js';
+
+const logger = createLogger('cache');
 
 export interface CacheConfig {
   // L1 cache TTL in seconds
@@ -66,12 +69,10 @@ export class CacheManager {
 
     this.stats = { hits: 0, misses: 0 };
 
-    // Log cache events in development
-    if (process.env.NODE_ENV === 'development') {
-      this.l1Cache.on('expired', (key) => {
-        console.log(`[Cache] Key expired: ${key}`);
-      });
-    }
+    // Log cache key expirations at debug level
+    this.l1Cache.on('expired', (key: string) => {
+      logger.debug({ key }, 'Cache key expired');
+    });
   }
 
   /**

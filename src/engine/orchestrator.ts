@@ -10,6 +10,9 @@ import type {
   Location,
   GeocodingResult,
 } from '../types/weather.js';
+import { createLogger } from '../lib/logger.js';
+
+const logger = createLogger('orchestrator');
 import {
   WeatherAdapter,
   OpenMeteoAdapter,
@@ -132,13 +135,11 @@ export class WeatherOrchestrator {
       metNorway: new MetNorwayAdapter(),  // Nordic countries
     };
 
-    console.log(
-      `[Orchestrator] Initialized ${this.adapters.size} weather providers:`,
-      Array.from(this.adapters.keys()).join(', ')
+    logger.info(
+      { providers: Array.from(this.adapters.keys()), count: this.adapters.size },
+      'Weather providers initialized'
     );
-    console.log(
-      `[Orchestrator] Regional providers: Bright Sky (Germany/EU), MET Norway (Nordic)`
-    );
+    logger.info('Regional providers available: Bright Sky (Germany/EU), MET Norway (Nordic)');
   }
 
   private initHealthStatus(provider: WeatherProvider): void {
@@ -163,7 +164,7 @@ export class WeatherOrchestrator {
       longitude
     );
     if (cached) {
-      console.log('[Orchestrator] Returning cached weather data');
+      logger.debug({ latitude, longitude }, 'Returning cached weather data');
       return cached;
     }
 
@@ -177,9 +178,9 @@ export class WeatherOrchestrator {
       throw new Error('No weather providers available');
     }
 
-    console.log(`[Orchestrator] Querying global providers: ${providers.join(', ')}`);
+    logger.info({ providers }, 'Querying global weather providers');
     if (regionalAdapters.length > 0) {
-      console.log(`[Orchestrator] Querying regional providers for enhanced accuracy`);
+      logger.info({ count: regionalAdapters.length }, 'Querying regional providers for enhanced accuracy');
     }
 
     // Fetch from all selected providers in parallel (global + regional)
@@ -331,8 +332,9 @@ export class WeatherOrchestrator {
       // Update health status on success
       this.updateHealthStatus(provider, true);
 
-      console.log(
-        `[Orchestrator] ${provider} responded in ${Date.now() - startTime}ms`
+      logger.info(
+        { provider, duration: Date.now() - startTime },
+        'Provider responded'
       );
 
       return {
@@ -341,9 +343,9 @@ export class WeatherOrchestrator {
         timestamp: new Date(),
       };
     } catch (error) {
-      console.error(
-        `[Orchestrator] ${provider} failed:`,
-        (error as Error).message
+      logger.error(
+        { provider, err: error },
+        'Provider request failed'
       );
       this.updateHealthStatus(provider, false);
       return null;
