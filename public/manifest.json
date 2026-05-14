@@ -1,0 +1,34 @@
+{
+  "name": "MoE Weather",
+  "short_name": "MoE Weather",
+  "description": "Mixture of Experts Weather - Accurate weather from multiple sources",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["weather", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Current Location",
+      "short_name": "My Location",
+      "description": "Get weather for your current location",
+      "url": "/?action=geolocation",
+      "icons": [{ "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ]
+}
