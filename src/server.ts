@@ -14,9 +14,15 @@ import { WeatherOrchestrator } from './engine/orchestrator.js';
 import type { WeatherRequest } from './types/weather.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { initSentry } from './lib/sentry.js';
+import { metricsRouter } from './routes/metrics.js';
+import { errorHandler } from './middleware/error-handler.js';
 
 // Load environment variables
 config();
+
+// Initialize Sentry error tracking (must be before routes)
+initSentry();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -837,6 +843,9 @@ app.get('/api/cache/stats', (_req: Request, res: Response) => {
   res.json(stats);
 });
 
+// Metrics endpoint
+app.use('/api/metrics', metricsRouter);
+
 // Serve static files (frontend)
 app.use(express.static(path.join(__dirname, '../public')));
 
@@ -845,14 +854,8 @@ app.get('*', (_req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-// Error handling middleware
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('[Server] Unhandled error:', err);
-  res.status(500).json({
-    error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined,
-  });
-});
+// Error handling middleware (must be last, identified by 4-parameter signature)
+app.use(errorHandler);
 
 // Helper function to convert weather data to imperial units
 function convertToImperial(weather: ReturnType<typeof orchestrator.getWeather> extends Promise<infer T> ? T : never): void {

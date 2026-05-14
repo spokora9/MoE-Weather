@@ -37,6 +37,7 @@
     "@capacitor/network": "^8.0.0",
     "@capacitor/splash-screen": "^8.0.0",
     "@capacitor/status-bar": "^8.0.0",
+    "@sentry/node": "^10.53.1",
     "axios": "^1.6.2",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
