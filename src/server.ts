@@ -14,6 +14,10 @@ import { WeatherOrchestrator } from './engine/orchestrator.js';
 import type { WeatherRequest } from './types/weather.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createLogger } from './lib/logger.js';
+import { loggingMiddleware } from './middleware/logging.js';
+
+const logger = createLogger('server');
 
 // Load environment variables
 config();
@@ -80,13 +84,8 @@ const apiLimiter = rateLimit({
 
 app.use('/api/', apiLimiter);
 
-// Request logging in development
-if (process.env.NODE_ENV === 'development') {
-  app.use((req: Request, _res: Response, next: NextFunction) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-    next();
-  });
-}
+// Structured HTTP request/response logging
+app.use(loggingMiddleware);
 
 // Health check endpoint
 app.get('/api/health', async (_req: Request, res: Response) => {
@@ -141,7 +140,7 @@ app.get('/api/weather', async (req: Request, res: Response) => {
         details: error.errors,
       });
     } else {
-      console.error('[API] Weather error:', error);
+      logger.error({ err: error }, 'Weather endpoint error');
       res.status(500).json({
         error: 'Failed to fetch weather data',
         message: (error as Error).message,
@@ -163,7 +162,7 @@ app.get('/api/geocode', async (req: Request, res: Response) => {
         details: error.errors,
       });
     } else {
-      console.error('[API] Geocode error:', error);
+      logger.error({ err: error }, 'Geocode endpoint error');
       res.status(500).json({
         error: 'Failed to geocode location',
         message: (error as Error).message,
@@ -248,7 +247,7 @@ app.get('/api/air-quality', async (req: Request, res: Response) => {
         details: error.errors,
       });
     } else {
-      console.error('[API] Air Quality error:', error);
+      logger.error({ err: error }, 'Air quality endpoint error');
       res.status(500).json({
         error: 'Failed to fetch air quality data',
         message: (error as Error).message,
@@ -362,7 +361,7 @@ app.get('/api/historical', async (req: Request, res: Response) => {
         details: error.errors,
       });
     } else {
-      console.error('[API] Historical error:', error);
+      logger.error({ err: error }, 'Historical endpoint error');
       res.status(500).json({
         error: 'Failed to fetch historical data',
         message: (error as Error).message,
@@ -505,7 +504,7 @@ app.get('/api/marine', async (req: Request, res: Response) => {
         details: error.errors,
       });
     } else {
-      console.error('[API] Marine error:', error);
+      logger.error({ err: error }, 'Marine endpoint error');
       res.status(500).json({
         error: 'Failed to fetch marine data',
         message: (error as Error).message,
@@ -588,7 +587,7 @@ app.get('/api/astronomy', async (req: Request, res: Response) => {
         details: error.errors,
       });
     } else {
-      console.error('[API] Astronomy error:', error);
+      logger.error({ err: error }, 'Astronomy endpoint error');
       res.status(500).json({
         error: 'Failed to fetch astronomy data',
         message: (error as Error).message,
@@ -847,7 +846,7 @@ app.get('*', (_req: Request, res: Response) => {
 
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('[Server] Unhandled error:', err);
+  logger.error({ err }, 'Unhandled server error');
   res.status(500).json({
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined,
@@ -904,35 +903,21 @@ function mmToInches(mm: number): number {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`
-╔═══════════════════════════════════════════════════════════════════════╗
-║                                                                       ║
-║   🌤️  MoE Weather API Server                                         ║
-║                                                                       ║
-║   Server running at http://localhost:${PORT}                           ║
-║                                                                       ║
-║   Endpoints:                                                          ║
-║   • GET  /api/weather?lat=&lon=     - Weather data                    ║
-║   • GET  /api/geocode?q=            - Search locations                ║
-║   • GET  /api/air-quality?lat=&lon= - Air quality & pollen            ║
-║   • GET  /api/historical?lat=&lon=  - Historical averages             ║
-║   • GET  /api/marine?lat=&lon=      - Waves, tides, surf conditions   ║
-║   • GET  /api/astronomy?lat=&lon=   - Sun, moon, golden hour          ║
-║   • GET  /api/health                - Health check                    ║
-║                                                                       ║
-╚═══════════════════════════════════════════════════════════════════════╝
-  `);
+  logger.info(
+    { port: PORT, endpoints: ['/api/weather', '/api/geocode', '/api/air-quality', '/api/historical', '/api/marine', '/api/astronomy', '/api/health'] },
+    'MoE Weather API Server started'
+  );
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('[Server] SIGTERM received, shutting down...');
+  logger.info('SIGTERM received, shutting down');
   orchestrator.shutdown();
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
-  console.log('[Server] SIGINT received, shutting down...');
+  logger.info('SIGINT received, shutting down');
   orchestrator.shutdown();
   process.exit(0);
 });
