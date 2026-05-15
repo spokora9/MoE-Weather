@@ -11,7 +11,6 @@ export function createMockAdapterResponse(overrides: Partial<AdapterResponse> = 
       windSpeed: 10,
       windDirection: 180,
       weatherCode: 0,
-      isDay: true,
       visibility: 10000,
       cloudCover: 20,
       weatherDescription: 'Clear sky',
@@ -21,7 +20,7 @@ export function createMockAdapterResponse(overrides: Partial<AdapterResponse> = 
     hourly: [],
     daily: [],
     alerts: [],
-    raw: { provider: 'open-meteo' as WeatherProvider, data: {}, fetchedAt: new Date() },
+    raw: { provider: 'open-meteo' as WeatherProvider, data: {}, fetchedAt: new Date(), responseTime: 0 },
     ...overrides,
   };
 }
