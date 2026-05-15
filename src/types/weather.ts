@@ -131,6 +131,8 @@ export type WeatherProvider =
   | 'tomorrow-io'
   | 'bright-sky'
   | 'met-norway'
+  | 'eccc-canada'
+  | 'meteo-alarm'
   | 'cached';
 
 export enum WeatherCode {
