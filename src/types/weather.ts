@@ -133,6 +133,8 @@ export type WeatherProvider =
   | 'met-norway'
   | 'eccc-canada'
   | 'meteo-alarm'
+  | 'pirate-weather'
+  | 'noaa-tides'
   | 'cached';
 
 export enum WeatherCode {
