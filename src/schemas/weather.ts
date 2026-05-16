@@ -6,7 +6,7 @@ export const CoordinateSchema = z.object({
 });
 
 export const WeatherRequestSchema = CoordinateSchema.extend({
-  units: z.enum(['metric', 'imperial']).default('metric'),
+  units: z.enum(['metric', 'imperial', 'uk', 'canada', 'auto']).default('auto'),
   hourly: z.coerce.number().int().min(1).max(168).default(48),
   daily: z.coerce.number().int().min(1).max(14).default(7),
   alerts: z.coerce.boolean().default(true),
