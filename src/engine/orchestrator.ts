@@ -11,8 +11,15 @@ import type {
   GeocodingResult,
 } from '../types/weather.js';
 import { createLogger } from '../lib/logger.js';
+import {
+  isEULocation,
+  isUKLocation,
+  isCanadaLocation,
+} from '../lib/country-lookup.js';
 
 const logger = createLogger('orchestrator');
+const routingLogger = logger.child({ component: 'orchestrator:routing' });
+
 import {
   WeatherAdapter,
   OpenMeteoAdapter,
@@ -21,6 +28,8 @@ import {
   WeatherAPIAdapter,
   BrightSkyAdapter,
   MetNorwayAdapter,
+  MeteoAlarmAdapter,
+  ECCCCanadaAdapter,
   type AdapterResponse,
 } from '../adapters/index.js';
 import { ConsensusEngine, type ConsensusConfig } from './consensus.js';
@@ -89,6 +98,8 @@ export class WeatherOrchestrator {
   private regionalAdapters: {
     brightSky: BrightSkyAdapter;
     metNorway: MetNorwayAdapter;
+    meteoAlarm: MeteoAlarmAdapter;
+    ecccCanada: ECCCCanadaAdapter;
   } | null = null;
 
   private initializeAdapters(): void {
@@ -131,15 +142,19 @@ export class WeatherOrchestrator {
 
     // Initialize regional adapters (always available, location-filtered)
     this.regionalAdapters = {
-      brightSky: new BrightSkyAdapter(),  // Germany/Central Europe
-      metNorway: new MetNorwayAdapter(),  // Nordic countries
+      brightSky: new BrightSkyAdapter(),      // Germany/Central Europe
+      metNorway: new MetNorwayAdapter(),      // Nordic countries
+      meteoAlarm: new MeteoAlarmAdapter(),    // EU severe weather alerts (35+ countries)
+      ecccCanada: new ECCCCanadaAdapter(),    // Canada weather & alerts
     };
 
     logger.info(
       { providers: Array.from(this.adapters.keys()), count: this.adapters.size },
       'Weather providers initialized'
     );
-    logger.info('Regional providers available: Bright Sky (Germany/EU), MET Norway (Nordic)');
+    routingLogger.info(
+      'Regional providers available: Bright Sky (Germany/EU), MET Norway (Nordic), MeteoAlarm (EU alerts), ECCC (Canada)'
+    );
   }
 
   private initHealthStatus(provider: WeatherProvider): void {
@@ -243,6 +258,18 @@ export class WeatherOrchestrator {
       // Nordic countries: MET Norway
       if (this.regionalAdapters.metNorway.isInCoverageArea(lat, lon)) {
         regional.push(this.regionalAdapters.metNorway);
+      }
+
+      // EU countries: MeteoAlarm for severe weather alerts
+      if (this.regionalAdapters.meteoAlarm.isInCoverageArea(lat, lon)) {
+        regional.push(this.regionalAdapters.meteoAlarm);
+        routingLogger.debug({ lat, lon }, 'MeteoAlarm included for EU location');
+      }
+
+      // Canada: ECCC for weather and alerts
+      if (this.regionalAdapters.ecccCanada.isInCoverageArea(lat, lon)) {
+        regional.push(this.regionalAdapters.ecccCanada);
+        routingLogger.debug({ lat, lon }, 'ECCC Canada included for Canadian location');
       }
     }
 
@@ -491,6 +518,27 @@ export class WeatherOrchestrator {
     const isAlaska = lat >= 51 && lat <= 72 && lon >= -180 && lon <= -130;
     const isHawaii = lat >= 18 && lat <= 29 && lon >= -161 && lon <= -154;
     return isContiguous || isAlaska || isHawaii;
+  }
+
+  /**
+   * Check if coordinates are in the EU (for MeteoAlarm routing)
+   */
+  private isEULocationInternal(lat: number, lon: number): boolean {
+    return isEULocation(lat, lon);
+  }
+
+  /**
+   * Check if coordinates are in the UK/Ireland region
+   */
+  private isUKLocationInternal(lat: number, lon: number): boolean {
+    return isUKLocation(lat, lon);
+  }
+
+  /**
+   * Check if coordinates are in Canada (for ECCC routing)
+   */
+  private isCanadaLocationInternal(lat: number, lon: number): boolean {
+    return isCanadaLocation(lat, lon);
   }
 
   /**

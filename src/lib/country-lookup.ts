@@ -62,3 +62,27 @@ export function getCountryCode(lat: number, lon: number): string | null {
 export function isEULocation(lat: number, lon: number): boolean {
   return getCountryCode(lat, lon) !== null;
 }
+
+/**
+ * Returns true if the given lat/lon falls within the UK/Ireland region.
+ * This is separated from EU for potential future Brexit handling.
+ *
+ * Coverage: UK and Ireland (includes Northern Ireland, Channel Islands, Isle of Man)
+ * Lat: 49.9° to 60.9°N, Lon: -8.2° to 1.8°E
+ */
+export function isUKLocation(lat: number, lon: number): boolean {
+  return lat >= 49.9 && lat <= 60.9 && lon >= -8.2 && lon <= 1.8;
+}
+
+/**
+ * Returns true if the given lat/lon falls within Canada.
+ *
+ * Coverage: Canadian territory from British Columbia to Newfoundland
+ * Lat: 41.7° to 83.1°N, Lon: -141.0° to -52.6°E
+ *
+ * Note: Includes territories and edge cases like southernmost regions (Ontario, Quebec)
+ * and northernmost Arctic islands.
+ */
+export function isCanadaLocation(lat: number, lon: number): boolean {
+  return lat >= 41.7 && lat <= 83.1 && lon >= -141.0 && lon <= -52.6;
+}
