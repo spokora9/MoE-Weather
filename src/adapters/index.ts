@@ -12,3 +12,5 @@ export { OpenWeatherMapAdapter } from './openweathermap.js';
 export { WeatherAPIAdapter } from './weatherapi.js';
 export { BrightSkyAdapter } from './bright-sky.js';
 export { MetNorwayAdapter } from './met-norway.js';
+export { MeteoAlarmAdapter } from './meteo-alarm.js';
+export { ECCCCanadaAdapter } from './eccc-canada.js';
