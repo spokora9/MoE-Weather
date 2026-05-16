@@ -48,7 +48,7 @@ function freshIp(): string {
 describe('anonymous tier', () => {
   it('allows the first 30 requests and blocks the 31st', () => {
     const ip = freshIp();
-    const next: NextFunction = vi.fn();
+    const next = vi.fn() as unknown as NextFunction;
 
     for (let i = 1; i <= 30; i++) {
       const req = makeReq({ ip });
@@ -61,7 +61,7 @@ describe('anonymous tier', () => {
     // 31st request should be blocked
     const req31 = makeReq({ ip });
     const res31 = makeRes();
-    rateLimitMiddleware(req31, res31, vi.fn());
+    rateLimitMiddleware(\1, \2, vi.fn() as unknown as any);
 
     expect(res31.statusCode).toBe(429);
     expect((res31.body as any).error).toBe('Too many requests');
@@ -75,7 +75,7 @@ describe('free tier', () => {
   it('allows 100 requests and blocks the 101st', () => {
     const ip = freshIp();
     const userId = 'free-user-1';
-    const next: NextFunction = vi.fn();
+    const next = vi.fn() as unknown as NextFunction;
 
     for (let i = 1; i <= 100; i++) {
       const req = makeReq({ ip, user: { id: userId } } as any);
@@ -88,7 +88,7 @@ describe('free tier', () => {
     // 101st request should be blocked
     const req101 = makeReq({ ip, user: { id: userId } } as any);
     const res101 = makeRes();
-    rateLimitMiddleware(req101, res101, vi.fn());
+    rateLimitMiddleware(\1, \2, vi.fn() as unknown as any);
 
     expect(res101.statusCode).toBe(429);
     expect((res101.body as any).retryAfter).toBeGreaterThan(0);
@@ -102,7 +102,7 @@ describe('pro tier', () => {
   it('allows 100 consecutive requests without blocking', () => {
     const ip = freshIp();
     const userId = 'pro-user-1';
-    const next: NextFunction = vi.fn();
+    const next = vi.fn() as unknown as NextFunction;
 
     for (let i = 1; i <= 100; i++) {
       const req = makeReq({ ip, user: { id: userId, tier: 'pro' } } as any);
@@ -122,7 +122,7 @@ describe('rate-limit headers', () => {
     const ip = freshIp();
     const req = makeReq({ ip });
     const res = makeRes();
-    const next: NextFunction = vi.fn();
+    const next = vi.fn() as unknown as NextFunction;
 
     rateLimitMiddleware(req, res, next);
 
@@ -135,7 +135,7 @@ describe('rate-limit headers', () => {
 
   it('decrements X-RateLimit-Remaining on each request', () => {
     const ip = freshIp();
-    const next: NextFunction = vi.fn();
+    const next = vi.fn() as unknown as NextFunction;
 
     const res1 = makeRes();
     rateLimitMiddleware(makeReq({ ip }), res1, next);
@@ -155,7 +155,7 @@ describe('rate-limit headers', () => {
 describe('429 response', () => {
   it('returns 429 JSON with retryAfter field when limit exceeded', () => {
     const ip = freshIp();
-    const next: NextFunction = vi.fn();
+    const next = vi.fn() as unknown as NextFunction;
 
     // Exhaust the anonymous limit (30 requests)
     for (let i = 0; i < 30; i++) {
@@ -163,7 +163,7 @@ describe('429 response', () => {
     }
 
     const res = makeRes();
-    rateLimitMiddleware(makeReq({ ip }), res, vi.fn());
+    rateLimitMiddleware(\1, \2, vi.fn() as unknown as any);
 
     expect(res.statusCode).toBe(429);
     const body = res.body as any;

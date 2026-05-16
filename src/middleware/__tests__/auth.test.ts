@@ -72,7 +72,7 @@ describe('optionalAuth middleware', () => {
 
     const req = makeReq();
     const res = makeRes();
-    const next: NextFunction = vi.fn();
+    const next = vi.fn() as unknown as NextFunction;
 
     await optionalAuth(req, res as unknown as Response, next);
 
@@ -98,7 +98,7 @@ describe('optionalAuth middleware', () => {
 
     const req = makeReq({ authorization: 'Bearer invalid.token.here' });
     const res = makeRes();
-    const next: NextFunction = vi.fn();
+    const next = vi.fn() as unknown as NextFunction;
 
     await optionalAuth(req, res as unknown as Response, next);
 
@@ -130,7 +130,7 @@ describe('requireAuth middleware', () => {
 
     const req = makeReq();
     const res = makeRes();
-    const next: NextFunction = vi.fn();
+    const next = vi.fn() as unknown as NextFunction;
 
     await requireAuth(req, res as unknown as Response, next);
 

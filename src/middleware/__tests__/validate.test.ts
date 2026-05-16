@@ -28,7 +28,7 @@ describe('validate middleware', () => {
   it('passes through a valid coordinate payload', () => {
     const req = makeReq({ lat: '40.7', lon: '-74.0' });
     const res = makeRes();
-    const next: NextFunction = vi.fn();
+    const next = vi.fn() as unknown as NextFunction;
 
     validate(WeatherRequestSchema)(req as Request, res as unknown as Response, next);
 
@@ -42,7 +42,7 @@ describe('validate middleware', () => {
   it('returns 400 with field error when lat=999 (out of range)', () => {
     const req = makeReq({ lat: '999', lon: '0' });
     const res = makeRes();
-    const next: NextFunction = vi.fn();
+    const next = vi.fn() as unknown as NextFunction;
 
     validate(WeatherRequestSchema)(req as Request, res as unknown as Response, next);
 
@@ -57,7 +57,7 @@ describe('validate middleware', () => {
   it('returns 400 when q is below 2 chars', () => {
     const req = makeReq({ q: 'x' });
     const res = makeRes();
-    const next: NextFunction = vi.fn();
+    const next = vi.fn() as unknown as NextFunction;
 
     validate(GeocodeRequestSchema)(req as Request, res as unknown as Response, next);
 
@@ -74,7 +74,7 @@ describe('validate middleware', () => {
     const decomposed = 'e\u0301'; // NFD: 2 code points
     const req = makeReq({ q: `  ${decomposed}  ` });
     const res = makeRes();
-    const next: NextFunction = vi.fn();
+    const next = vi.fn() as unknown as NextFunction;
 
     validate(GeocodeRequestSchema)(req as Request, res as unknown as Response, next);
 
@@ -87,7 +87,7 @@ describe('validate middleware', () => {
   it('defaults units to metric when omitted', () => {
     const req = makeReq({ lat: '51.5', lon: '-0.1' });
     const res = makeRes();
-    const next: NextFunction = vi.fn();
+    const next = vi.fn() as unknown as NextFunction;
 
     validate(WeatherRequestSchema)(req as Request, res as unknown as Response, next);
 
@@ -98,7 +98,7 @@ describe('validate middleware', () => {
   it('returns 400 when hourly=200 (exceeds max of 168)', () => {
     const req = makeReq({ lat: '51.5', lon: '-0.1', hourly: '200' });
     const res = makeRes();
-    const next: NextFunction = vi.fn();
+    const next = vi.fn() as unknown as NextFunction;
 
     validate(WeatherRequestSchema)(req as Request, res as unknown as Response, next);
 

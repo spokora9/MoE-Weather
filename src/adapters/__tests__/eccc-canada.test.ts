@@ -133,7 +133,7 @@ describe('ECCCCanadaAdapter', () => {
     });
 
     it('returns alert in response.alerts when a mocked alert is present', async () => {
-      setupHandlers(ecccAlertsResponse);
+      setupHandlers(ecccAlertsResponse as any);
 
       const adapter = new ECCCCanadaAdapter();
       const response = await adapter.fetch({
