@@ -61,7 +61,8 @@ describe('anonymous tier', () => {
     // 31st request should be blocked
     const req31 = makeReq({ ip });
     const res31 = makeRes();
-    rateLimitMiddleware(\1, \2, vi.fn() as unknown as any);
+    const next31 = vi.fn() as unknown as NextFunction;
+    rateLimitMiddleware(req31, res31, next31);
 
     expect(res31.statusCode).toBe(429);
     expect((res31.body as any).error).toBe('Too many requests');
@@ -88,7 +89,8 @@ describe('free tier', () => {
     // 101st request should be blocked
     const req101 = makeReq({ ip, user: { id: userId } } as any);
     const res101 = makeRes();
-    rateLimitMiddleware(\1, \2, vi.fn() as unknown as any);
+    const next101 = vi.fn() as unknown as NextFunction;
+    rateLimitMiddleware(req101, res101, next101);
 
     expect(res101.statusCode).toBe(429);
     expect((res101.body as any).retryAfter).toBeGreaterThan(0);
@@ -163,7 +165,8 @@ describe('429 response', () => {
     }
 
     const res = makeRes();
-    rateLimitMiddleware(\1, \2, vi.fn() as unknown as any);
+    const nextFinal = vi.fn() as unknown as NextFunction;
+    rateLimitMiddleware(makeReq({ ip }), res, nextFinal);
 
     expect(res.statusCode).toBe(429);
     const body = res.body as any;
