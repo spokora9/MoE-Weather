@@ -16,6 +16,7 @@ import type {
 } from '../types/weather.js';
 import { getWeatherDescription } from '../types/weather.js';
 import type { AdapterResponse } from '../adapters/base.js';
+import { isCanadaLocation } from '../lib/country-lookup.js';
 
 export interface ConsensusConfig {
   // Outlier detection threshold (IQR multiplier)
@@ -104,15 +105,22 @@ export class ConsensusEngine {
       visibility: 0.20,
     });
 
+    // Tomorrow.io - commercial high-resolution model with minute-by-minute
+    // precipitation nowcasting. Premium weight on nowcast/precipitation_60min
+    // and elevated weight on precipitation generally because of the proprietary
+    // radar/blended dataset. Default metrics kept moderate (0.25) since the
+    // longer-horizon forecast quality is comparable to the free providers.
     this.providerWeights.set('tomorrow-io', {
-      temperature: 0.10,
-      precipitation: 0.10,
-      wind: 0.10,
-      humidity: 0.10,
-      pressure: 0.10,
-      uvIndex: 0.15,
-      cloudCover: 0.10,
-      visibility: 0.10,
+      temperature: 0.25,
+      precipitation: 0.35,
+      precipitation_60min: 0.45, // Premium: minute-by-minute nowcast
+      nowcast: 0.45,             // Alias used by nowcast aggregation paths
+      wind: 0.25,
+      humidity: 0.25,
+      pressure: 0.25,
+      uvIndex: 0.25,
+      cloudCover: 0.25,
+      visibility: 0.25,
     });
 
     // Bright Sky (German DWD) - excellent for Germany/Central Europe
@@ -138,6 +146,107 @@ export class ConsensusEngine {
       cloudCover: 0.25,
       visibility: 0.20,
     });
+
+    // Environment and Climate Change Canada (ECCC) - authoritative national
+    // weather service for Canada. Default of 0.30 reflects its strong baseline
+    // accuracy; the per-location boost (see getLocationAdjustedWeight) raises
+    // temperature/wind weights to 0.40+ inside Canadian coordinates, where
+    // ECCC's models and station network meaningfully outperform global providers.
+    this.providerWeights.set('eccc-canada', {
+      temperature: 0.30,
+      precipitation: 0.30,
+      wind: 0.30,
+      humidity: 0.28,
+      pressure: 0.28,
+      uvIndex: 0.25,
+      cloudCover: 0.25,
+      visibility: 0.25,
+    });
+
+    // Pirate Weather - drop-in replacement for the retired Dark Sky API.
+    // Free tier (no key) returns Open-Meteo-derived data; with a paid key it
+    // serves GFS/HRRR/NBM blends. Treated as a tertiary numeric source: low
+    // default weight (0.15) so it adds diversity without overshadowing
+    // higher-accuracy providers. Operators may bump this via
+    // updateProviderWeights() once they have confidence in their key tier.
+    this.providerWeights.set('pirate-weather', {
+      temperature: 0.15,
+      precipitation: 0.15,
+      wind: 0.15,
+      humidity: 0.15,
+      pressure: 0.15,
+      uvIndex: 0.15,
+      cloudCover: 0.15,
+      visibility: 0.15,
+    });
+
+    // MeteoAlarm - pan-European alerts aggregator. It does NOT publish numerical
+    // forecast variables; the adapter returns alerts only. We register a small
+    // 0.10 weight for completeness so any inadvertent numeric contribution is
+    // sharply down-weighted relative to actual forecast providers. Alerts are
+    // merged via mergeAlerts() which does not consult these weights.
+    this.providerWeights.set('meteo-alarm', {
+      temperature: 0.10,
+      precipitation: 0.10,
+      wind: 0.10,
+      humidity: 0.10,
+      pressure: 0.10,
+      uvIndex: 0.10,
+      cloudCover: 0.10,
+      visibility: 0.10,
+    });
+
+    // NOAA CO-OPS Tides - tide-only adapter. It MUST NOT participate in any
+    // weather consensus aggregation; explicit zero weights guarantee that even
+    // if a tide response accidentally lands in a numeric aggregation, it
+    // contributes nothing. Tide values are surfaced through a separate channel.
+    this.providerWeights.set('noaa-tides', {
+      temperature: 0,
+      precipitation: 0,
+      precipitation_60min: 0,
+      nowcast: 0,
+      wind: 0,
+      humidity: 0,
+      pressure: 0,
+      uvIndex: 0,
+      cloudCover: 0,
+      visibility: 0,
+    });
+  }
+
+  /**
+   * Get a location-adjusted weight for a provider/metric pair.
+   *
+   * Currently boosts ECCC Canada temperature and wind to 0.40 inside Canadian
+   * coordinates, where the national service is the authoritative source. This
+   * is a per-call helper - the underlying table is not mutated.
+   *
+   * @param provider - The provider to score
+   * @param metric - The metric name (e.g. 'temperature', 'wind')
+   * @param latitude - Request latitude
+   * @param longitude - Request longitude
+   * @returns Numeric weight, never negative
+   */
+  getLocationAdjustedWeight(
+    provider: WeatherProvider,
+    metric: string,
+    latitude: number,
+    longitude: number
+  ): number {
+    const base = this.getWeight(provider, metric);
+
+    if (provider === 'eccc-canada' && isCanadaLocation(latitude, longitude)) {
+      // Boost temperature/wind in Canada to outrank global providers (max 0.30).
+      if (metric === 'temperature' || metric === 'wind') {
+        return Math.max(base, 0.4);
+      }
+      // Modest boost on related metrics so ECCC dominates the Canadian blend.
+      if (metric === 'precipitation' || metric === 'humidity' || metric === 'pressure') {
+        return Math.max(base, 0.35);
+      }
+    }
+
+    return base;
   }
 
   /**
@@ -152,9 +261,12 @@ export class ConsensusEngine {
   }
 
   /**
-   * Get weight for a specific metric from a provider
+   * Get weight for a specific metric from a provider.
+   * Public for tests and orchestrator inspection; falls back to 0.1 for any
+   * unknown provider/metric so unregistered providers don't get silently
+   * over-weighted.
    */
-  private getWeight(provider: WeatherProvider, metric: string): number {
+  getWeight(provider: WeatherProvider, metric: string): number {
     const weights = this.providerWeights.get(provider);
     return weights?.[metric] ?? 0.1;
   }
