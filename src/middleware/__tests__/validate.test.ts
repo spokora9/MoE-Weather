@@ -84,7 +84,7 @@ describe('validate middleware', () => {
     expect(parsed).toBe('\u00E9');
   });
 
-  it('defaults units to metric when omitted', () => {
+  it("defaults units to 'auto' when omitted (locale-aware resolution)", () => {
     const req = makeReq({ lat: '51.5', lon: '-0.1' });
     const res = makeRes();
     const next = vi.fn() as unknown as NextFunction;
@@ -92,7 +92,27 @@ describe('validate middleware', () => {
     validate(WeatherRequestSchema)(req as Request, res as unknown as Response, next);
 
     expect(next).toHaveBeenCalledOnce();
-    expect((req.query as Record<string, unknown>).units).toBe('metric');
+    expect((req.query as Record<string, unknown>).units).toBe('auto');
+  });
+
+  it("accepts new unit-locale values ('uk', 'canada')", () => {
+    for (const u of ['uk', 'canada', 'imperial', 'metric', 'auto']) {
+      const req = makeReq({ lat: '51.5', lon: '-0.1', units: u });
+      const res = makeRes();
+      const next = vi.fn() as unknown as NextFunction;
+      validate(WeatherRequestSchema)(req as Request, res as unknown as Response, next);
+      expect(next).toHaveBeenCalledOnce();
+      expect((req.query as Record<string, unknown>).units).toBe(u);
+    }
+  });
+
+  it('rejects invalid units value', () => {
+    const req = makeReq({ lat: '51.5', lon: '-0.1', units: 'kelvin' });
+    const res = makeRes();
+    const next = vi.fn() as unknown as NextFunction;
+    validate(WeatherRequestSchema)(req as Request, res as unknown as Response, next);
+    expect(next).not.toHaveBeenCalled();
+    expect(res._statusCode).toBe(400);
   });
 
   it('returns 400 when hourly=200 (exceeds max of 168)', () => {

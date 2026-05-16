@@ -20,6 +20,15 @@ import { initSentry } from './lib/sentry.js';
 import { metricsRouter } from './routes/metrics.js';
 import { createGeocodeRouter } from './routes/geocode.js';
 import { errorHandler } from './middleware/error-handler.js';
+import {
+  type UnitLocale,
+  getDefaultUnitLocale,
+  convertTemperature,
+  convertWindSpeed,
+  convertPressure,
+  convertVisibility,
+  getUnitLabels,
+} from './lib/units.js';
 
 const logger = createLogger('server');
 
@@ -36,7 +45,7 @@ const __dirname = path.dirname(__filename);
 const weatherQuerySchema = z.object({
   lat: z.coerce.number().min(-90).max(90),
   lon: z.coerce.number().min(-180).max(180),
-  units: z.enum(['metric', 'imperial']).optional().default('metric'),
+  units: z.enum(['metric', 'imperial', 'uk', 'canada', 'auto']).optional().default('auto'),
   hourly: z.coerce.number().min(1).max(168).optional().default(48),
   daily: z.coerce.number().min(1).max(14).optional().default(7),
   alerts: z.coerce.boolean().optional().default(true),
@@ -119,10 +128,17 @@ app.get('/api/weather', async (req: Request, res: Response) => {
   try {
     const query = weatherQuerySchema.parse(req.query);
 
+    // Resolve the unit locale: explicit user param wins, else default by lat/lon.
+    const unitLocale: UnitLocale =
+      query.units === 'auto'
+        ? getDefaultUnitLocale(query.lat, query.lon)
+        : (query.units as UnitLocale);
+
     const request: WeatherRequest = {
       latitude: query.lat,
       longitude: query.lon,
-      units: query.units,
+      // Orchestrator always returns metric; per-locale conversion happens here.
+      units: 'metric',
       hourlyHours: query.hourly,
       dailyDays: query.daily,
       includeAlerts: query.alerts,
@@ -130,12 +146,18 @@ app.get('/api/weather', async (req: Request, res: Response) => {
 
     const weather = await orchestrator.getWeather(request);
 
-    // Convert units if needed
-    if (query.units === 'imperial') {
-      convertToImperial(weather);
-    }
+    applyUnitLocale(weather, unitLocale);
 
-    res.json(weather);
+    const labels = getUnitLabels(unitLocale);
+    const response = {
+      ...weather,
+      units: {
+        locale: unitLocale,
+        labels,
+      },
+    };
+
+    res.json(response);
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({
@@ -834,50 +856,56 @@ app.get('*', (_req: Request, res: Response) => {
 // Error handling middleware (must be last, identified by 4-parameter signature)
 app.use(errorHandler);
 
-// Helper function to convert weather data to imperial units
-function convertToImperial(weather: ReturnType<typeof orchestrator.getWeather> extends Promise<infer T> ? T : never): void {
-  // Convert current weather
+/**
+ * Mutates an orchestrator WeatherData payload, converting all numeric fields
+ * (temperature / wind / pressure / visibility) from the orchestrator's metric
+ * baseline into the requested unit locale.
+ *
+ * Orchestrator baseline units:
+ *   temperature → °C, wind → m/s, pressure → hPa, visibility → meters
+ *
+ * Wind speeds are converted m/s → km/h before delegating to convertWindSpeed,
+ * which expects km/h per the units.ts contract.
+ */
+function applyUnitLocale(
+  weather: ReturnType<typeof orchestrator.getWeather> extends Promise<infer T> ? T : never,
+  unitLocale: UnitLocale,
+): void {
+  const msToKmh = (ms: number) => ms * 3.6;
+
   if (weather.current) {
-    weather.current.temperature = celsiusToFahrenheit(weather.current.temperature);
-    weather.current.feelsLike = celsiusToFahrenheit(weather.current.feelsLike);
-    weather.current.windSpeed = msToMph(weather.current.windSpeed);
-    if (weather.current.windGust) {
-      weather.current.windGust = msToMph(weather.current.windGust);
+    weather.current.temperature = convertTemperature(weather.current.temperature, unitLocale);
+    weather.current.feelsLike = convertTemperature(weather.current.feelsLike, unitLocale);
+    weather.current.windSpeed = convertWindSpeed(msToKmh(weather.current.windSpeed), unitLocale);
+    if (weather.current.windGust !== undefined) {
+      weather.current.windGust = convertWindSpeed(msToKmh(weather.current.windGust), unitLocale);
     }
-    weather.current.visibility = metersToMiles(weather.current.visibility);
+    weather.current.pressure = convertPressure(weather.current.pressure, unitLocale);
+    weather.current.visibility = convertVisibility(weather.current.visibility, unitLocale);
   }
 
-  // Convert hourly forecasts
   for (const hour of weather.hourly) {
-    hour.temperature = celsiusToFahrenheit(hour.temperature);
-    hour.feelsLike = celsiusToFahrenheit(hour.feelsLike);
-    hour.windSpeed = msToMph(hour.windSpeed);
-    hour.precipitation = mmToInches(hour.precipitation);
+    hour.temperature = convertTemperature(hour.temperature, unitLocale);
+    hour.feelsLike = convertTemperature(hour.feelsLike, unitLocale);
+    hour.windSpeed = convertWindSpeed(msToKmh(hour.windSpeed), unitLocale);
+    if (hour.windGust !== undefined) {
+      hour.windGust = convertWindSpeed(msToKmh(hour.windGust), unitLocale);
+    }
+    hour.pressure = convertPressure(hour.pressure, unitLocale);
+    if (hour.visibility !== undefined) {
+      hour.visibility = convertVisibility(hour.visibility, unitLocale);
+    }
   }
 
-  // Convert daily forecasts
   for (const day of weather.daily) {
-    day.temperatureMax = celsiusToFahrenheit(day.temperatureMax);
-    day.temperatureMin = celsiusToFahrenheit(day.temperatureMin);
-    day.windSpeed = msToMph(day.windSpeed);
-    day.precipitation = mmToInches(day.precipitation);
+    day.temperatureMax = convertTemperature(day.temperatureMax, unitLocale);
+    day.temperatureMin = convertTemperature(day.temperatureMin, unitLocale);
+    day.windSpeed = convertWindSpeed(msToKmh(day.windSpeed), unitLocale);
+    if (day.windGust !== undefined) {
+      day.windGust = convertWindSpeed(msToKmh(day.windGust), unitLocale);
+    }
+    day.pressure = convertPressure(day.pressure, unitLocale);
   }
-}
-
-function celsiusToFahrenheit(c: number): number {
-  return Math.round((c * 9/5 + 32) * 10) / 10;
-}
-
-function msToMph(ms: number): number {
-  return Math.round(ms * 2.237 * 10) / 10;
-}
-
-function metersToMiles(m: number): number {
-  return Math.round(m / 1609.34 * 10) / 10;
-}
-
-function mmToInches(mm: number): number {
-  return Math.round(mm / 25.4 * 100) / 100;
 }
 
 // Start server
