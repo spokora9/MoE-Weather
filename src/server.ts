@@ -18,6 +18,7 @@ import { createLogger } from './lib/logger.js';
 import { loggingMiddleware } from './middleware/logging.js';
 import { initSentry } from './lib/sentry.js';
 import { metricsRouter } from './routes/metrics.js';
+import { createGeocodeRouter } from './routes/geocode.js';
 import { errorHandler } from './middleware/error-handler.js';
 
 const logger = createLogger('server');
@@ -39,10 +40,6 @@ const weatherQuerySchema = z.object({
   hourly: z.coerce.number().min(1).max(168).optional().default(48),
   daily: z.coerce.number().min(1).max(14).optional().default(7),
   alerts: z.coerce.boolean().optional().default(true),
-});
-
-const geocodeQuerySchema = z.object({
-  q: z.string().min(2).max(100),
 });
 
 const historicalQuerySchema = z.object({
@@ -155,27 +152,8 @@ app.get('/api/weather', async (req: Request, res: Response) => {
   }
 });
 
-// Geocoding endpoint
-app.get('/api/geocode', async (req: Request, res: Response) => {
-  try {
-    const query = geocodeQuerySchema.parse(req.query);
-    const results = await orchestrator.geocode(query.q);
-    res.json(results);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      res.status(400).json({
-        error: 'Invalid request parameters',
-        details: error.errors,
-      });
-    } else {
-      logger.error({ err: error }, 'Geocode endpoint error');
-      res.status(500).json({
-        error: 'Failed to geocode location',
-        message: (error as Error).message,
-      });
-    }
-  }
-});
+// Geocoding endpoint — supports `lang` query param + `Accept-Language` header
+app.use('/api/geocode', createGeocodeRouter(orchestrator));
 
 // Air Quality endpoint (Open-Meteo Air Quality API)
 const airQualityQuerySchema = z.object({

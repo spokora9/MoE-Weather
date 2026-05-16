@@ -12,9 +12,19 @@ export const WeatherRequestSchema = CoordinateSchema.extend({
   alerts: z.coerce.boolean().default(true),
 });
 
+/**
+ * BCP-47 language tag (subset supported by Open-Meteo geocoding):
+ *   - 2-letter language code (e.g. "en", "de", "fr")
+ *   - Optionally followed by a 2-letter region code (e.g. "en-US", "pt-BR")
+ * Open-Meteo supported languages: en, de, fr, es, it, pt, ru, ja, zh
+ */
+export const LanguageCodeSchema = z
+  .string()
+  .regex(/^[a-z]{2}(-[A-Z]{2})?$/, 'Invalid language code (expected BCP47 like "en" or "en-US")');
+
 export const GeocodeRequestSchema = z.object({
   q: z.string().min(2).max(100).transform(s => s.normalize('NFC').trim()),
-  lang: z.string().length(2).default('en').optional(),
+  lang: LanguageCodeSchema.optional(),
 });
 
 export const AirQualityRequestSchema = CoordinateSchema;

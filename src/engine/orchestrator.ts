@@ -542,11 +542,24 @@ export class WeatherOrchestrator {
   }
 
   /**
-   * Geocode a location name to coordinates
+   * Geocode a location name to coordinates.
+   *
+   * @param query  The location name to search for.
+   * @param lang   Optional BCP-47 language code (e.g. "en", "de", "fr").
+   *               Open-Meteo uses this to localize result names (e.g. "Köln" vs
+   *               "Cologne"). The language is also included in the cache key so
+   *               results for different languages do not collide. Defaults to
+   *               "en" when not provided.
    */
-  async geocode(query: string): Promise<GeocodingResult[]> {
-    // Check cache
-    const cacheKey = query.toLowerCase().trim();
+  async geocode(query: string, lang?: string): Promise<GeocodingResult[]> {
+    // Normalize language: Open-Meteo's geocoding API expects the primary
+    // language subtag (e.g. "en" rather than "en-US").
+    const requestedLang = (lang ?? 'en').toLowerCase();
+    const primaryLang = requestedLang.split('-')[0] ?? 'en';
+
+    // Check cache — include lang in the key so "Köln" (de) and "Cologne" (en)
+    // are cached separately.
+    const cacheKey = `${query.toLowerCase().trim()}:${primaryLang}`;
     const cached = this.cache.get<GeocodingResult[]>(
       'geocoding',
       0,
@@ -561,7 +574,7 @@ export class WeatherOrchestrator {
     const params = new URLSearchParams({
       name: query,
       count: '10',
-      language: 'en',
+      language: primaryLang,
       format: 'json',
     });
 

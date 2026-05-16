@@ -307,4 +307,52 @@ describe('WeatherOrchestrator - Edge Cases', () => {
       expect(veryFarNorth.latitude).toBeGreaterThan(83.1); // Beyond Canada
     });
   });
+
+  // === GEOCODING LANGUAGE PASSTHROUGH ===
+  describe('geocode() language passthrough', () => {
+    let fetchSpy: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      // Build a fresh Response per call — Response bodies can only be read once.
+      const buildResponse = () =>
+        new Response(
+          JSON.stringify({
+            results: [
+              { name: 'Köln', country: 'Germany', latitude: 50.9, longitude: 6.9 },
+            ],
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        );
+      fetchSpy = vi.fn();
+      fetchSpy.mockImplementation(async () => buildResponse());
+      globalThis.fetch = fetchSpy as unknown as typeof globalThis.fetch;
+    });
+
+    it('defaults to language=en when no lang is provided', async () => {
+      await orchestrator.geocode('Cologne');
+      const url = fetchSpy.mock.calls[0]?.[0] as string;
+      expect(url).toContain('language=en');
+    });
+
+    it('forwards an explicit lang to Open-Meteo', async () => {
+      await orchestrator.geocode('Koln', 'de');
+      const url = fetchSpy.mock.calls[0]?.[0] as string;
+      expect(url).toContain('language=de');
+    });
+
+    it('strips the region subtag (en-US → en)', async () => {
+      await orchestrator.geocode('Cologne', 'en-US');
+      const url = fetchSpy.mock.calls[0]?.[0] as string;
+      expect(url).toContain('language=en');
+    });
+
+    it('caches results separately per language', async () => {
+      await orchestrator.geocode('Cologne', 'en');
+      await orchestrator.geocode('Cologne', 'de');
+      await orchestrator.geocode('Cologne', 'en'); // cache hit
+      await orchestrator.geocode('Cologne', 'de'); // cache hit
+      // Only two upstream calls: one per language.
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    });
+  });
 });
