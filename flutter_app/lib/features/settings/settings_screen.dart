@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:moe_weather/features/auth/auth_state.dart';
 import 'package:moe_weather/features/auth/revenuecat_service.dart';
+import 'package:moe_weather/core/theme/theme_provider.dart';
 import 'settings_model.dart';
 import 'settings_provider.dart';
 
@@ -30,7 +31,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-class _SettingsBody extends StatelessWidget {
+class _SettingsBody extends ConsumerWidget {
   const _SettingsBody({
     required this.settings,
     required this.tier,
@@ -42,12 +43,46 @@ class _SettingsBody extends StatelessWidget {
   final void Function(AppSettings) onChanged;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final themeMode = ref.watch(themeModeProvider);
 
     return ListView(
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+          child: Text('Theme', style: textTheme.titleSmall?.copyWith(
+            color: colorScheme.primary,
+          )),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: SegmentedButton<AppThemeMode>(
+            segments: const [
+              ButtonSegment(
+                value: AppThemeMode.system,
+                label: Text('System'),
+                icon: Icon(Icons.brightness_auto),
+              ),
+              ButtonSegment(
+                value: AppThemeMode.light,
+                label: Text('Light'),
+                icon: Icon(Icons.light_mode),
+              ),
+              ButtonSegment(
+                value: AppThemeMode.dark,
+                label: Text('Dark'),
+                icon: Icon(Icons.dark_mode),
+              ),
+            ],
+            selected: {themeMode},
+            onSelectionChanged: (selected) {
+              ref.read(themeModeProvider.notifier).setMode(selected.first);
+            },
+          ),
+        ),
+        const Divider(),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
           child: Text('Units', style: textTheme.titleSmall?.copyWith(
