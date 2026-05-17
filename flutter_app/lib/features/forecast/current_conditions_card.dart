@@ -7,10 +7,12 @@ class CurrentConditionsCard extends StatelessWidget {
     super.key,
     required this.current,
     required this.locationName,
+    this.animationWidget,
   });
 
   final CurrentWeather current;
   final String locationName;
+  final Widget? animationWidget;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +31,10 @@ class CurrentConditionsCard extends StatelessWidget {
             // Location name
             Text(locationName, style: tt.titleMedium?.copyWith(color: cs.onSurfaceVariant)),
             const SizedBox(height: 8),
+            if (animationWidget != null) ...[
+              Center(child: animationWidget!),
+              const SizedBox(height: 8),
+            ],
             // Temperature + feels-like
             Text(
               '${current.temperature.round()}°',

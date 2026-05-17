@@ -4,6 +4,8 @@ import 'current_conditions_card.dart';
 import 'daily_forecast_list.dart';
 import 'forecast_provider.dart';
 import 'hourly_forecast_list.dart';
+import 'shimmer_loading.dart';
+import 'weather_animation.dart';
 
 class ForecastScreen extends ConsumerStatefulWidget {
   const ForecastScreen({
@@ -38,8 +40,26 @@ class _ForecastScreenState extends ConsumerState<ForecastScreen> {
     final tt = Theme.of(context).textTheme;
 
     return forecast.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      loading: () => Scaffold(
+        body: ListView(
+          children: const [
+            ShimmerCard(),
+            ShimmerCard(),
+            ShimmerCard(),
+            ShimmerCard(),
+            ShimmerCard(),
+            ShimmerListItem(),
+            ShimmerListItem(),
+            ShimmerListItem(),
+            ShimmerListItem(),
+            ShimmerListItem(),
+            ShimmerListItem(),
+            ShimmerListItem(),
+            ShimmerListItem(),
+            ShimmerListItem(),
+            ShimmerListItem(),
+          ],
+        ),
       ),
       error: (e, _) => Scaffold(
         body: Center(
@@ -72,32 +92,43 @@ class _ForecastScreenState extends ConsumerState<ForecastScreen> {
         }
 
         return Scaffold(
-          body: RefreshIndicator(
-            onRefresh: () => ref.read(forecastProvider.notifier).refresh(),
-            child: CustomScrollView(
-              slivers: [
-                SliverAppBar(
-                  title: Text(widget.locationName),
-                  floating: true,
-                  snap: true,
-                ),
-                // Alert banner — show when alerts exist
-                if (weather.alerts.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: _AlertBanner(
-                      headline: weather.alerts.first.headline,
-                      count: weather.alerts.length,
-                    ),
+          body: Semantics(
+            label: 'Pull to refresh forecast',
+            child: RefreshIndicator(
+              onRefresh: () => ref.read(forecastProvider.notifier).refresh(),
+              child: CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    title: Text(widget.locationName),
+                    floating: true,
+                    snap: true,
                   ),
-                // Current conditions
-                if (weather.current != null)
-                  SliverToBoxAdapter(
-                    child: CurrentConditionsCard(
-                      current: weather.current!,
-                      locationName: widget.locationName,
+                  // Alert banner — show when alerts exist
+                  if (weather.alerts.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: _AlertBanner(
+                        headline: weather.alerts.first.headline,
+                        count: weather.alerts.length,
+                      ),
                     ),
-                  )
-                else
+                  // Current conditions
+                  if (weather.current != null)
+                    SliverToBoxAdapter(
+                      child: Semantics(
+                        label: 'Current weather conditions',
+                        child: Hero(
+                          tag: 'current_conditions',
+                          child: CurrentConditionsCard(
+                            current: weather.current!,
+                            locationName: widget.locationName,
+                            animationWidget: WeatherAnimationWidget(
+                              weatherCode: weather.current!.weatherCode,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  else
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -117,9 +148,10 @@ class _ForecastScreenState extends ConsumerState<ForecastScreen> {
                   SliverToBoxAdapter(
                     child: DailyForecastList(days: weather.daily),
                   ),
-                // Bottom padding
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
-              ],
+                  // Bottom padding
+                  const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                ],
+              ),
             ),
           ),
         );

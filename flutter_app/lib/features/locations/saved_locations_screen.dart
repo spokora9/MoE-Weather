@@ -145,13 +145,16 @@ class _SavedLocationsBody extends ConsumerWidget {
           final location = locations[index];
           return ListTile(
             key: ValueKey(location.id),
-            leading: IconButton(
-              icon: Icon(
-                location.isDefault ? Icons.star : Icons.star_border,
-                color: location.isDefault ? colorScheme.primary : null,
+            leading: Hero(
+              tag: 'location_${location.id}',
+              child: IconButton(
+                icon: Icon(
+                  location.isDefault ? Icons.star : Icons.star_border,
+                  color: location.isDefault ? colorScheme.primary : null,
+                ),
+                onPressed: () =>
+                    ref.read(locationsProvider.notifier).setDefault(location.id),
               ),
-              onPressed: () =>
-                  ref.read(locationsProvider.notifier).setDefault(location.id),
             ),
             title: Text(location.name),
             subtitle: Text(location.country ?? ''),
