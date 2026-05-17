@@ -45,6 +45,7 @@ dependencies:
   supabase_flutter: ^2.8.0
   purchases_flutter: ^10.1.0
   google_sign_in: ^6.2.2
+  fl_chart: ^0.69.0
 
 dev_dependencies:
   flutter_test:
