@@ -40,6 +40,7 @@ dependencies:
   hive_flutter: ^1.1.0
   freezed_annotation: ^3.1.0
   json_annotation: 4.9.0
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:
@@ -54,6 +55,7 @@ dev_dependencies:
   build_runner: ^2.4.13
   freezed: ^3.1.0
   json_serializable: ^6.9.0
+  http_mock_adapter: ^0.6.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
