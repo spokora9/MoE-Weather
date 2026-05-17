@@ -224,7 +224,7 @@ class InterstitialAdController {
 
     _preloadedAd = null;
     if (_debugShowAd != null) {
-      _debugShowAd!(ad);
+      _debugShowAd(ad);
     } else {
       ad.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {
