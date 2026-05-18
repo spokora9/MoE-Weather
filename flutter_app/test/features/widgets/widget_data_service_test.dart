@@ -1,39 +1,39 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moe_weather/features/widgets/weather_widget_canvas.dart';
 import 'package:moe_weather/features/widgets/widget_data.dart';
 
 void main() {
-  group('WidgetSnapshot', () {
-    test('can be constructed with required fields', () {
-      final now = DateTime(2026, 5, 17, 12, 0);
-      final snapshot = WidgetSnapshot(
-        temperature: 22.5,
-        feelsLike: 20.0,
-        description: 'Mostly sunny',
-        weatherCode: 1,
-        locationName: 'London',
-        humidity: 60.0,
-        windSpeed: 15.0,
-        highTemp: 25.0,
-        lowTemp: 14.0,
-        lastUpdated: now,
-        unitLabel: '°C',
-      );
+  final _snapshot = WidgetSnapshot(
+    temperature: 22.5,
+    feelsLike: 20.0,
+    description: 'Mostly sunny',
+    weatherCode: 1,
+    locationName: 'London',
+    humidity: 60.0,
+    windSpeed: 15.0,
+    highTemp: 25.0,
+    lowTemp: 14.0,
+    lastUpdated: DateTime(2026, 5, 17, 12, 0),
+    unitLabel: '°C',
+  );
 
-      expect(snapshot.temperature, 22.5);
-      expect(snapshot.feelsLike, 20.0);
-      expect(snapshot.description, 'Mostly sunny');
-      expect(snapshot.weatherCode, 1);
-      expect(snapshot.locationName, 'London');
-      expect(snapshot.humidity, 60.0);
-      expect(snapshot.windSpeed, 15.0);
-      expect(snapshot.highTemp, 25.0);
-      expect(snapshot.lowTemp, 14.0);
-      expect(snapshot.lastUpdated, now);
-      expect(snapshot.unitLabel, '°C');
+  group('WidgetSnapshot', () {
+    test('required fields are stored', () {
+      expect(_snapshot.temperature, 22.5);
+      expect(_snapshot.feelsLike, 20.0);
+      expect(_snapshot.description, 'Mostly sunny');
+      expect(_snapshot.weatherCode, 1);
+      expect(_snapshot.locationName, 'London');
+      expect(_snapshot.humidity, 60.0);
+      expect(_snapshot.windSpeed, 15.0);
+      expect(_snapshot.highTemp, 25.0);
+      expect(_snapshot.lowTemp, 14.0);
+      expect(_snapshot.unitLabel, '°C');
     });
 
-    test('unitLabel defaults to °C when not supplied', () {
-      final snapshot = WidgetSnapshot(
+    test('unitLabel defaults to °C', () {
+      final s = WidgetSnapshot(
         temperature: 18.0,
         feelsLike: 16.0,
         description: 'Cloudy',
@@ -43,32 +43,56 @@ void main() {
         windSpeed: 10.0,
         lastUpdated: DateTime(2026, 5, 17),
       );
-
-      expect(snapshot.unitLabel, '°C');
-      expect(snapshot.highTemp, isNull);
-      expect(snapshot.lowTemp, isNull);
+      expect(s.unitLabel, '°C');
+      expect(s.highTemp, isNull);
+      expect(s.lowTemp, isNull);
     });
   });
 
-  group('WidgetDataKeys', () {
-    test('all constants are non-empty strings', () {
-      final keys = [
-        WidgetDataKeys.temperature,
-        WidgetDataKeys.feelsLike,
-        WidgetDataKeys.description,
-        WidgetDataKeys.weatherCode,
-        WidgetDataKeys.locationName,
-        WidgetDataKeys.humidity,
-        WidgetDataKeys.windSpeed,
-        WidgetDataKeys.highTemp,
-        WidgetDataKeys.lowTemp,
-        WidgetDataKeys.lastUpdated,
-        WidgetDataKeys.unitLabel,
-      ];
+  group('WeatherWidgetCanvas', () {
+    testWidgets('small canvas renders without error', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SizedBox(
+            width: 160,
+            height: 160,
+            child: WeatherWidgetCanvas(
+              snapshot: _snapshot,
+              renderSize: WidgetRenderSize.small,
+            ),
+          ),
+        ),
+      );
+      expect(find.byType(WeatherWidgetCanvas), findsOneWidget);
+    });
 
-      for (final key in keys) {
-        expect(key, isNotEmpty, reason: 'Key "$key" must not be empty');
-      }
+    testWidgets('medium canvas renders without error', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SizedBox(
+            width: 329,
+            height: 155,
+            child: WeatherWidgetCanvas(
+              snapshot: _snapshot,
+              renderSize: WidgetRenderSize.medium,
+            ),
+          ),
+        ),
+      );
+      expect(find.byType(WeatherWidgetCanvas), findsOneWidget);
+    });
+
+    testWidgets('shows location name', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SizedBox(
+            width: 329,
+            height: 155,
+            child: WeatherWidgetCanvas(snapshot: _snapshot),
+          ),
+        ),
+      );
+      expect(find.text('London'), findsOneWidget);
     });
   });
 }

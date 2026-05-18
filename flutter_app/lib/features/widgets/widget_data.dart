@@ -1,17 +1,3 @@
-abstract final class WidgetDataKeys {
-  static const String temperature = 'widget_temperature';
-  static const String feelsLike = 'widget_feels_like';
-  static const String description = 'widget_description';
-  static const String weatherCode = 'widget_weather_code';
-  static const String locationName = 'widget_location_name';
-  static const String humidity = 'widget_humidity';
-  static const String windSpeed = 'widget_wind_speed';
-  static const String highTemp = 'widget_high_temp';
-  static const String lowTemp = 'widget_low_temp';
-  static const String lastUpdated = 'widget_last_updated';
-  static const String unitLabel = 'widget_unit_label';
-}
-
 class WidgetSnapshot {
   const WidgetSnapshot({
     required this.temperature,
