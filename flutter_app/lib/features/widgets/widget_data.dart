@@ -1,3 +1,17 @@
+class HourlyWidgetEntry {
+  const HourlyWidgetEntry({
+    required this.time,
+    required this.temperature,
+    required this.feelsLike,
+    required this.weatherCode,
+  });
+
+  final DateTime time;
+  final double temperature;
+  final double feelsLike;
+  final int weatherCode;
+}
+
 class WidgetSnapshot {
   const WidgetSnapshot({
     required this.temperature,
@@ -11,6 +25,11 @@ class WidgetSnapshot {
     this.lowTemp,
     required this.lastUpdated,
     this.unitLabel = '°C',
+    this.hourly = const [],
+    this.sunrise,
+    this.sunset,
+    this.alertText,
+    this.alertEnd,
   });
 
   final double temperature;
@@ -24,4 +43,9 @@ class WidgetSnapshot {
   final double? lowTemp;
   final DateTime lastUpdated;
   final String unitLabel;
+  final List<HourlyWidgetEntry> hourly;
+  final DateTime? sunrise;
+  final DateTime? sunset;
+  final String? alertText;
+  final DateTime? alertEnd;
 }

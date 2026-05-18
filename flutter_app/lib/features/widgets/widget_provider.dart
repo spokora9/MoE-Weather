@@ -15,7 +15,23 @@ Future<bool> pushWeatherToWidget({
   if (tier != SubscriptionTier.pro) return false;
   final current = weather.current;
   if (current == null) return false;
+
   final today = weather.daily.isNotEmpty ? weather.daily.first : null;
+  final activeAlert = weather.alerts.where((a) => a.end.isAfter(DateTime.now())).firstOrNull;
+
+  // Next 7 hourly entries starting from the closest future hour.
+  final now = DateTime.now();
+  final hourly = weather.hourly
+      .where((h) => h.time.isAfter(now))
+      .take(7)
+      .map((h) => HourlyWidgetEntry(
+            time: h.time,
+            temperature: h.temperature,
+            feelsLike: h.feelsLike,
+            weatherCode: h.weatherCode,
+          ))
+      .toList();
+
   final snapshot = WidgetSnapshot(
     temperature: current.temperature,
     feelsLike: current.feelsLike,
@@ -28,7 +44,13 @@ Future<bool> pushWeatherToWidget({
     lowTemp: today?.temperatureMin,
     lastUpdated: current.timestamp,
     unitLabel: unitLabel,
+    hourly: hourly,
+    sunrise: today?.sunrise,
+    sunset: today?.sunset,
+    alertText: activeAlert?.headline,
+    alertEnd: activeAlert?.end,
   );
+
   await ref.read(widgetDataServiceProvider).updateWidget(snapshot);
   return true;
 }

@@ -11,6 +11,7 @@ const _androidWidgetClass = 'com.moeweather.app.widgets.WeatherWidgetReceiver';
 
 const _keySmall = 'widget_snapshot_small';
 const _keyMedium = 'widget_snapshot_medium';
+const _keyLarge = 'widget_snapshot_large';
 
 class WidgetDataService {
   static bool _initialized = false;
@@ -34,6 +35,11 @@ class WidgetDataService {
         WeatherWidgetCanvas(snapshot: snapshot, renderSize: WidgetRenderSize.medium),
         key: _keyMedium,
         logicalSize: const Size(329, 155),
+      ),
+      HomeWidget.renderFlutterWidget(
+        WeatherWidgetCanvas(snapshot: snapshot, renderSize: WidgetRenderSize.large),
+        key: _keyLarge,
+        logicalSize: const Size(329, 345),
       ),
     ]);
     await HomeWidget.updateWidget(

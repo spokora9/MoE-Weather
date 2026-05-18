@@ -11,12 +11,11 @@ private func loadImage(key: String) -> UIImage? {
     return UIImage(data: data)
 }
 
-private struct RenderedWidgetView: View {
-    let imageKey: String
-
+private struct RenderedView: View {
+    let key: String
     var body: some View {
         Group {
-            if let img = loadImage(key: imageKey) {
+            if let img = loadImage(key: key) {
                 Image(uiImage: img)
                     .resizable()
                     .scaledToFill()
@@ -32,15 +31,15 @@ private struct RenderedWidgetView: View {
 
 struct WeatherWidgetSmallView: View {
     let entry: WeatherEntry
-    var body: some View { RenderedWidgetView(imageKey: "widget_snapshot_small") }
+    var body: some View { RenderedView(key: "widget_snapshot_small") }
 }
 
 struct WeatherWidgetMediumView: View {
     let entry: WeatherEntry
-    var body: some View { RenderedWidgetView(imageKey: "widget_snapshot_medium") }
+    var body: some View { RenderedView(key: "widget_snapshot_medium") }
 }
 
 struct WeatherWidgetLargeView: View {
     let entry: WeatherEntry
-    var body: some View { RenderedWidgetView(imageKey: "widget_snapshot_medium") }
+    var body: some View { RenderedView(key: "widget_snapshot_large") }
 }
